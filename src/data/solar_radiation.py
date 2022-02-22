@@ -45,17 +45,21 @@ def GetSolarRadiationData():
     #
     # # Return all but first 2 lines of csv to get data:
     #
+    getFromApi = False
 
-    df = pd.read_csv(
-        'https://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv?wkt=POINT({lon}%20{lat})&names={year}&leap_day={leap}&interval={interval}&utc={utc}&full_name={name}&email={email}&affiliation={affiliation}&mailing_list={mailing_list}&reason={reason}&api_key={api}&attributes={attr}'.format(
-         year=year, lat=lat, lon=lon, leap=leap_year, interval=interval, utc=utc, name=your_name, email=your_email,
-         mailing_list=mailing_list, affiliation=your_affiliation, reason=reason_for_use, api=api_key, attr=attributes),
-        skiprows=2)
+    if getFromApi:
+        df = pd.read_csv(
+            'https://developer.nrel.gov/api/solar/nsrdb_psm3_download.csv?wkt=POINT({lon}%20{lat})&names={year}&leap_day={leap}&interval={interval}&utc={utc}&full_name={name}&email={email}&affiliation={affiliation}&mailing_list={mailing_list}&reason={reason}&api_key={api}&attributes={attr}'.format(
+                year=year, lat=lat, lon=lon, leap=leap_year, interval=interval, utc=utc, name=your_name,
+                email=your_email,
+                mailing_list=mailing_list, affiliation=your_affiliation, reason=reason_for_use, api=api_key,
+                attr=attributes),
+            skiprows=2)
 
-    # Set the time index in the pandas dataframe:
-    df = df.set_index(pd.date_range('1/1/{yr}'.format(yr=year), freq=interval + 'Min', periods=525600 / int(interval)))
-
-    # take a look
+        # Set the time index in the pandas dataframe:
+        df = df.set_index(
+            pd.date_range('1/1/{yr}'.format(yr=year), freq=interval + 'Min', periods=525600 / int(interval)))
+        # take a look
     print('shape:', df.shape)
     df.head()
     return df

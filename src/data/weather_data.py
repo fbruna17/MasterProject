@@ -10,7 +10,7 @@ def GetWeatherData():
     start_date = datetime(2013, 1, 1, 00, 00, 00)
     end_date = datetime(2019, 1, 1, 00, 00, 00)
     temp_date = datetime(2013, 1, 21, 00, 00, 00)
-    location = "Edmonton, Canada"
+    location = "groningen, netherlands"
 
     url = "https://visual-crossing-weather.p.rapidapi.com/history"
 
