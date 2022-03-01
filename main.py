@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -93,21 +94,30 @@ model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=16,
                    output_length=horizon)
 
 optimizer = torch.optim.Adam(model.parameters())
-loss_function = nn.MSELoss()
+loss_function = nn.L1Loss()
+
+training_loss = []
+validation_loss = []
 
 for i in range(epochs):
     model.train()
-    for x,y in train_data:
+
+    temp_losses = []
+    for x, y in train_data:
         x = x.to(device).float()
         y = y.to(device).float()
 
         optimizer.zero_grad()
         y_hat = model(x).unsqueeze(-1)
         loss = loss_function(y, y_hat)
+        temp_losses.append(loss.cpu().detach().numpy())
 
         loss.backward()  # Calculates gradients w.r.t. loss
         optimizer.step()  # Changes the weights
 
+    training_loss.append(np.mean(np.stack(temp_losses)))
+
+    temp_losses = []
     model.eval()
     for x, y in val_data:
         x = x.to(device).float()
@@ -116,6 +126,9 @@ for i in range(epochs):
         # Predict and calculate loss
         y_hat = model(x).unsqueeze(-1)
         loss = loss_function(y, y_hat)
+        temp_losses.append(loss.cpu().detach().numpy())
+
+    validation_loss.append(np.mean(np.stack(temp_losses)))
 
 ## Testing
 
