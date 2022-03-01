@@ -7,14 +7,14 @@ from torch.utils.data import Dataset, DataLoader
 ## LOAD DATA
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
-df = pd.read_pickle(path)[:200]
+df = pd.read_pickle(path)
 
 ## Outlier Removal and Feature Extraction
 ...
 
 ## TRAIN, VALIDATION, TEST SPLIT
-split_train = int(len(df)*0.8)
-split_val = split_train + int(len(df)*0.1)
+split_train = int(len(df) * 0.8)
+split_val = split_train + int(len(df) * 0.1)
 
 train = df[:split_train]
 val = df[split_train:split_val]
@@ -22,6 +22,7 @@ test = df[split_val:]
 
 ## SCALING
 ...
+
 
 ## Torch Dataset
 
@@ -40,21 +41,24 @@ class SequenceDataset(Dataset):
 
     def __getitem__(self, i):
         start_y = i + self.memory
-        _x = self.X[i: start_y, :] # ':' means all columns
+        _x = self.X[i: start_y, :]  # ':' means all columns
         _y = self.y[start_y: start_y + self.horizon]
         return _x, _y
+
 
 memory = 3
 horizon = 2
 
-train_sequence = SequenceDataset(train, target='GHI',features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
-val_sequence = SequenceDataset(val, target='GHI',features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
-test_sequence = SequenceDataset(test, target='GHI',features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
+train_sequence = SequenceDataset(train, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
+val_sequence = SequenceDataset(val, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
+test_sequence = SequenceDataset(test, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
 ## Torch Dataloader
 
-train_data = DataLoader(train_sequence)
-val_data = DataLoader(val_sequence)
+train_data = DataLoader(train_sequence, batch_size=64)
+val_data = DataLoader(val_sequence, batch_size=64)
 test_data = DataLoader(test_sequence)
+
+
 ## MODEL
 
 class SimpleLSTM(nn.Module):
@@ -85,8 +89,9 @@ class SimpleLSTM(nn.Module):
         # y_pred: (batch, horizon)
         return y_pred
 
+
 ## Training
-epochs = 10
+epochs = 25
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=16,
                    num_layers=1,
@@ -108,7 +113,7 @@ for i in range(epochs):
         y = y.to(device).float()
 
         optimizer.zero_grad()
-        y_hat = model(x).unsqueeze(-1)
+        y_hat = model(x)
         loss = loss_function(y, y_hat)
         temp_losses.append(loss.cpu().detach().numpy())
 
@@ -124,13 +129,29 @@ for i in range(epochs):
         y = y.to(device).float()
 
         # Predict and calculate loss
-        y_hat = model(x).unsqueeze(-1)
+        y_hat = model(x)
         loss = loss_function(y, y_hat)
         temp_losses.append(loss.cpu().detach().numpy())
 
     validation_loss.append(np.mean(np.stack(temp_losses)))
 
+    if i % 10 == 0:
+        print(f"Loss at epoch {i} is {training_loss[-1]}")
+
 ## Testing
 
+with torch.no_grad():
+    temp_losses = []
+    for x, y in test_data:
+        x = x.to(device).float()
+        y = y.to(device).float()
 
+        # Make prediction(s)
+        y_hat = model(x)
 
+        # Calculate error
+        error = loss_function(y.squeeze(), y_hat)
+
+        temp_losses.append(error)
+
+test_error = np.mean(np.stack(temp_losses))
