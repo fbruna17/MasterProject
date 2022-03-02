@@ -3,11 +3,14 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
+from torch.utils.tensorboard import SummaryWriter
+from tensorboard.backend.event_processing import event_accumulator
+from src.logger.logger import Logger
 
 ## LOAD DATA
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
-df = pd.read_pickle(path)
+df = pd.read_pickle(path)[:500]
 
 ## Outlier Removal and Feature Extraction
 ...
@@ -48,14 +51,15 @@ class SequenceDataset(Dataset):
 
 memory = 3
 horizon = 2
+batch = 1
 
 train_sequence = SequenceDataset(train, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
 val_sequence = SequenceDataset(val, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
 test_sequence = SequenceDataset(test, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
 ## Torch Dataloader
 
-train_data = DataLoader(train_sequence, batch_size=64)
-val_data = DataLoader(val_sequence, batch_size=64)
+train_data = DataLoader(train_sequence, batch_size=batch)
+val_data = DataLoader(val_sequence, batch_size=batch)
 test_data = DataLoader(test_sequence)
 
 
@@ -91,7 +95,7 @@ class SimpleLSTM(nn.Module):
 
 
 ## Training
-epochs = 25
+epochs = 15
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=16,
                    num_layers=1,
@@ -103,6 +107,9 @@ loss_function = nn.L1Loss()
 
 training_loss = []
 validation_loss = []
+
+writer = SummaryWriter()
+log = Logger()
 
 for i in range(epochs):
     model.train()
@@ -121,6 +128,8 @@ for i in range(epochs):
         optimizer.step()  # Changes the weights
 
     training_loss.append(np.mean(np.stack(temp_losses)))
+    train_loss = np.mean(np.stack(temp_losses))
+    writer.add_scalar("Training Loss", np.mean(np.stack(temp_losses)), i)
 
     temp_losses = []
     model.eval()
@@ -134,9 +143,17 @@ for i in range(epochs):
         temp_losses.append(loss.cpu().detach().numpy())
 
     validation_loss.append(np.mean(np.stack(temp_losses)))
+    val_loss = np.mean(np.stack(temp_losses))
+    writer.add_scalar("Validation Loss", np.mean(np.stack(temp_losses)), i)
+    writer.add_scalars("Losses", {'Training': train_loss,
+                                  'Validation': val_loss}, i)
+
+    log.append_loss(int(i+1), train_loss, val_loss, str(loss_function))
 
     if i % 10 == 0:
         print(f"Loss at epoch {i} is {training_loss[-1]}")
+
+log.plot_losses()
 
 ## Testing
 
