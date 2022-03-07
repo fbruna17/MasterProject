@@ -13,7 +13,8 @@ path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
 df = pd.read_pickle(path)[:500]
 
 ## Outlier Removal and Feature Extraction
-...
+weather_copy = df[['Cloudopacity', 'DewPoint', 'Pressure', 'WindDir', 'WindVel', 'Pw', 'Tamb']]
+df = df.loc[(df.Hour < 22) & (df.Hour > 5)]
 
 ## TRAIN, VALIDATION, TEST SPLIT
 split_train = int(len(df) * 0.8)
