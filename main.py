@@ -1,20 +1,43 @@
+import warnings
+
 import pandas as pd
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from src.logger.logger import Logger
+from src.Datahandler import scaling
 
-## LOAD DATA
+warnings.simplefilter(action="ignore")
+# %% LOAD DATA
+from src.Datahandler.scaling import TimeSeriesTransformer
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
 df = pd.read_pickle(path)[:500]
+
+
+
+
+# %% Outlier Removal and Feature Extraction
+
+
+def generate_noise(series: pd.Series):
+    min_value = series.min()
+    max_value = series.max()
+    noise = series.apply(lambda x: x - 0.015 * ((min_value - max_value) * np.random.random() + min_value))
+    noise = np.maximum(noise, min_value)
+    return noise
 
 ## Outlier Removal and Feature Extraction
 weather_copy = df[['Cloudopacity', 'DewPoint', 'Pressure', 'WindDir', 'WindVel', 'Pw', 'Tamb']]
 df = df.loc[(df.Hour < 22) & (df.Hour > 5)]
 
-## TRAIN, VALIDATION, TEST SPLIT
+def generate_leads(df: pd.DataFrame, series: pd.Series, col_name, number_of_leads: int = 5):
+    for i in range(1, number_of_leads):
+        df[f"{col_name} t+{i}"] = series.shift(-i)
+
+
+# %% TRAIN, VALIDATION, TEST SPLIT
 split_train = int(len(df) * 0.8)
 split_val = split_train + int(len(df) * 0.1)
 
@@ -22,11 +45,20 @@ train = df[:split_train]
 val = df[split_train:split_val]
 test = df[split_val:]
 
-## SCALING
-...
+# %% SCALING
+
+transformer = TimeSeriesTransformer()
+transformer.standardizer_fit(train)
+train = transformer.standardizer_transform(train)
+val = transformer.standardizer_transform(val)
+test = transformer.standardizer_transform(test)
 
 
-## Torch Dataset
+
+# %%
+
+
+# %% Torch Dataset
 
 
 class SequenceDataset(Dataset):
@@ -52,9 +84,9 @@ memory = 15
 horizon = 5
 batch = 1
 
-train_sequence = SequenceDataset(train, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
-val_sequence = SequenceDataset(val, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
-test_sequence = SequenceDataset(test, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
+train_sequence = SequenceDataset(train, target='GHI', features=list(df.columns), memory=memory, horizon=horizon)
+val_sequence = SequenceDataset(val, target='GHI', features=list(df.columns), memory=memory, horizon=horizon)
+test_sequence = SequenceDataset(test, target='GHI', features=list(df.columns), memory=memory, horizon=horizon)
 ## Torch Dataloader
 
 train_data = DataLoader(train_sequence, batch_size=batch)
@@ -96,7 +128,7 @@ class SimpleLSTM(nn.Module):
 ## Training
 epochs = 5
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=16,
+model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=48,
                    num_layers=1,
                    dropout=0.1,
                    output_length=horizon)
@@ -153,13 +185,13 @@ with torch.no_grad():
         y = y.to(device).float()
 
         # Make prediction(s)
-        y_hat = model(x)
+        y_hat = model(x).unsqueeze(-1)
 
         # inverse..
 
         # Calculate error
-        error = loss_function(y.squeeze(), y_hat.squeeze())
-
+        y, y_hat = transformer.inverse_transform_target(y, y_hat)
+        error = loss_function(y, y_hat)
         temp_losses.append(error)
         log.add_prediction(X=x, y=y, y_hat=y_hat, error=error, loss_function=str(loss_function))
 
