@@ -3,8 +3,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from torch.utils.tensorboard import SummaryWriter
-from tensorboard.backend.event_processing import event_accumulator
 from src.logger.logger import Logger
 
 ## LOAD DATA
@@ -50,8 +48,8 @@ class SequenceDataset(Dataset):
         return _x, _y
 
 
-memory = 3
-horizon = 2
+memory = 15
+horizon = 5
 batch = 1
 
 train_sequence = SequenceDataset(train, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
@@ -96,7 +94,7 @@ class SimpleLSTM(nn.Module):
 
 
 ## Training
-epochs = 15
+epochs = 5
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=16,
                    num_layers=1,
@@ -106,10 +104,6 @@ model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=16,
 optimizer = torch.optim.Adam(model.parameters())
 loss_function = nn.L1Loss()
 
-training_loss = []
-validation_loss = []
-
-writer = SummaryWriter()
 log = Logger()
 
 for i in range(epochs):
@@ -128,9 +122,7 @@ for i in range(epochs):
         loss.backward()  # Calculates gradients w.r.t. loss
         optimizer.step()  # Changes the weights
 
-    training_loss.append(np.mean(np.stack(temp_losses)))
     train_loss = np.mean(np.stack(temp_losses))
-    writer.add_scalar("Training Loss", np.mean(np.stack(temp_losses)), i)
 
     temp_losses = []
     model.eval()
@@ -143,16 +135,12 @@ for i in range(epochs):
         loss = loss_function(y, y_hat)
         temp_losses.append(loss.cpu().detach().numpy())
 
-    validation_loss.append(np.mean(np.stack(temp_losses)))
     val_loss = np.mean(np.stack(temp_losses))
-    writer.add_scalar("Validation Loss", np.mean(np.stack(temp_losses)), i)
-    writer.add_scalars("Losses", {'Training': train_loss,
-                                  'Validation': val_loss}, i)
 
     log.append_loss(int(i+1), train_loss, val_loss, str(loss_function))
 
     if i % 10 == 0:
-        print(f"Loss at epoch {i} is {training_loss[-1]}")
+        print(f"Loss at epoch {i} is {round(train_loss, 5)}")
 
 log.plot_losses()
 
@@ -167,9 +155,12 @@ with torch.no_grad():
         # Make prediction(s)
         y_hat = model(x)
 
+        # inverse..
+
         # Calculate error
-        error = loss_function(y.squeeze(), y_hat)
+        error = loss_function(y.squeeze(), y_hat.squeeze())
 
         temp_losses.append(error)
+        log.add_prediction(X=x, y=y, y_hat=y_hat, error=error, loss_function=str(loss_function))
 
-test_error = np.mean(np.stack(temp_losses))
+log.plot_prediction(15)
