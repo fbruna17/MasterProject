@@ -1,18 +1,21 @@
+import warnings
+
 import pandas as pd
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-
-## LOAD DATA
+from src.Datahandler import scaling
+warnings.simplefilter(action="ignore")
+#%% LOAD DATA
+from src.Datahandler.scaling import TimeSeriesTransformer
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
 df = pd.read_pickle(path)
+warnings.simplefilter(action="ignore")
+#%% Outlier Removal and Feature Extraction
 
-## Outlier Removal and Feature Extraction
-...
-
-## TRAIN, VALIDATION, TEST SPLIT
+#%% TRAIN, VALIDATION, TEST SPLIT
 split_train = int(len(df) * 0.8)
 split_val = split_train + int(len(df) * 0.1)
 
@@ -20,11 +23,20 @@ train = df[:split_train]
 val = df[split_train:split_val]
 test = df[split_val:]
 
-## SCALING
-...
+#%% SCALING
+
+transfomer = TimeSeriesTransformer(train)
+transfomer.standardizer_fit()
+train = transfomer.standardizer_transform(train)
+val = transfomer.standardizer_transform(val)
+test = transfomer.standardizer_transform(test)
+
+#%%
 
 
-## Torch Dataset
+
+
+#%% Torch Dataset
 
 
 class SequenceDataset(Dataset):
@@ -46,8 +58,8 @@ class SequenceDataset(Dataset):
         return _x, _y
 
 
-memory = 3
-horizon = 2
+memory = 15
+horizon = 4
 
 train_sequence = SequenceDataset(train, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
 val_sequence = SequenceDataset(val, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
@@ -91,7 +103,7 @@ class SimpleLSTM(nn.Module):
 
 
 ## Training
-epochs = 25
+epochs = 40
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=16,
                    num_layers=1,
@@ -147,11 +159,11 @@ with torch.no_grad():
         y = y.to(device).float()
 
         # Make prediction(s)
-        y_hat = model(x)
+        y_hat = model(x).unsqueeze(-1)
 
         # Calculate error
-        error = loss_function(y.squeeze(), y_hat)
-
+        y_hat, y = transfomer.inverse_transform_target(y, y_hat)
+        error = loss_function(torch.tensor(y).float(), torch.tensor(y_hat).float())
         temp_losses.append(error)
 
 test_error = np.mean(np.stack(temp_losses))
