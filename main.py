@@ -1,26 +1,19 @@
 import warnings
-
 import pandas as pd
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from src.logger.logger import Logger
-from src.Datahandler import scaling
-
+from src.Datahandler.scaling import TimeSeriesTransformer
 warnings.simplefilter(action="ignore")
 # %% LOAD DATA
-from src.Datahandler.scaling import TimeSeriesTransformer
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
 df = pd.read_pickle(path)[:500]
 
 
-
-
 # %% Outlier Removal and Feature Extraction
-
-
 def generate_noise(series: pd.Series):
     min_value = series.min()
     max_value = series.max()
@@ -28,13 +21,14 @@ def generate_noise(series: pd.Series):
     noise = np.maximum(noise, min_value)
     return noise
 
-## Outlier Removal and Feature Extraction
-weather_copy = df[['Cloudopacity', 'DewPoint', 'Pressure', 'WindDir', 'WindVel', 'Pw', 'Tamb']]
-df = df.loc[(df.Hour < 22) & (df.Hour > 5)]
 
 def generate_leads(df: pd.DataFrame, series: pd.Series, col_name, number_of_leads: int = 5):
     for i in range(1, number_of_leads):
         df[f"{col_name} t+{i}"] = series.shift(-i)
+
+
+weather_copy = df[['Cloudopacity', 'DewPoint', 'Pressure', 'WindDir', 'WindVel', 'Pw', 'Tamb']]
+df = df.loc[(df.Hour < 22) & (df.Hour > 5)]
 
 
 # %% TRAIN, VALIDATION, TEST SPLIT
@@ -52,11 +46,6 @@ transformer.standardizer_fit(train)
 train = transformer.standardizer_transform(train)
 val = transformer.standardizer_transform(val)
 test = transformer.standardizer_transform(test)
-
-
-
-# %%
-
 
 # %% Torch Dataset
 
@@ -87,14 +76,11 @@ batch = 1
 train_sequence = SequenceDataset(train, target='GHI', features=list(df.columns), memory=memory, horizon=horizon)
 val_sequence = SequenceDataset(val, target='GHI', features=list(df.columns), memory=memory, horizon=horizon)
 test_sequence = SequenceDataset(test, target='GHI', features=list(df.columns), memory=memory, horizon=horizon)
-## Torch Dataloader
 
 train_data = DataLoader(train_sequence, batch_size=batch)
 val_data = DataLoader(val_sequence, batch_size=batch)
 test_data = DataLoader(test_sequence)
 
-
-## MODEL
 
 class SimpleLSTM(nn.Module):
     def __init__(self,
@@ -168,8 +154,7 @@ for i in range(epochs):
         temp_losses.append(loss.cpu().detach().numpy())
 
     val_loss = np.mean(np.stack(temp_losses))
-
-    log.append_loss(int(i+1), train_loss, val_loss, str(loss_function))
+    log.append_loss(int(i + 1), train_loss, val_loss, str(loss_function))
 
     if i % 10 == 0:
         print(f"Loss at epoch {i} is {round(train_loss, 5)}")
@@ -177,7 +162,6 @@ for i in range(epochs):
 log.plot_losses()
 
 ## Testing
-
 with torch.no_grad():
     temp_losses = []
     for x, y in test_data:
@@ -187,10 +171,10 @@ with torch.no_grad():
         # Make prediction(s)
         y_hat = model(x).unsqueeze(-1)
 
-        # inverse..
+        # Inverse Transforming
+        y, y_hat = transformer.inverse_transform_target(y, y_hat)
 
         # Calculate error
-        y, y_hat = transformer.inverse_transform_target(y, y_hat)
         error = loss_function(y, y_hat)
         temp_losses.append(error)
         log.add_prediction(X=x, y=y, y_hat=y_hat, error=error, loss_function=str(loss_function))
