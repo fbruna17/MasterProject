@@ -163,4 +163,4 @@ with torch.no_grad():
         temp_losses.append(error)
         log.add_prediction(X=x, y=y, y_hat=y_hat, error=error, loss_function=str(loss_function))
 
-log.plot_prediction(15)
+log.plot_prediction()
