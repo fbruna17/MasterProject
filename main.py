@@ -6,16 +6,33 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from src.Datahandler import scaling
+
 warnings.simplefilter(action="ignore")
-#%% LOAD DATA
+# %% LOAD DATA
 from src.Datahandler.scaling import TimeSeriesTransformer
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
 df = pd.read_pickle(path)
 warnings.simplefilter(action="ignore")
-#%% Outlier Removal and Feature Extraction
 
-#%% TRAIN, VALIDATION, TEST SPLIT
+
+# %% Outlier Removal and Feature Extraction
+
+
+def generate_noise(series: pd.Series):
+    min_value = series.min()
+    max_value = series.max()
+    noise = series.apply(lambda x: x - 0.015 * ((min_value - max_value) * np.random.random() + min_value))
+    noise = np.maximum(noise, min_value)
+    return noise
+
+
+def generate_leads(df: pd.DataFrame, series: pd.Series, col_name, number_of_leads: int = 5):
+    for i in range(1, number_of_leads):
+        df[f"{col_name} t+{i}"] = series.shift(-i)
+
+
+# %% TRAIN, VALIDATION, TEST SPLIT
 split_train = int(len(df) * 0.8)
 split_val = split_train + int(len(df) * 0.1)
 
@@ -23,20 +40,22 @@ train = df[:split_train]
 val = df[split_train:split_val]
 test = df[split_val:]
 
-#%% SCALING
+# %% SCALING
 
-transfomer = TimeSeriesTransformer(train)
-transfomer.standardizer_fit()
-train = transfomer.standardizer_transform(train)
-val = transfomer.standardizer_transform(val)
-test = transfomer.standardizer_transform(test)
+transformer = TimeSeriesTransformer()
+transformer.standardizer_fit(train)
+train = transformer.standardizer_transform(train)
+val = transformer.standardizer_transform(val)
+test = transformer.standardizer_transform(test)
 
-#%%
+inv_transform = transformer.inverse_transform_target(y=torch.tensor(train["GHI"]).float(),
+                                                     y_hat=torch.tensor(train["GHI"]).float())
 
 
+# %%
 
 
-#%% Torch Dataset
+# %% Torch Dataset
 
 
 class SequenceDataset(Dataset):
@@ -61,13 +80,13 @@ class SequenceDataset(Dataset):
 memory = 15
 horizon = 4
 
-train_sequence = SequenceDataset(train, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
-val_sequence = SequenceDataset(val, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
-test_sequence = SequenceDataset(test, target='GHI', features=['GHI', 'Tamb'], memory=memory, horizon=horizon)
+train_sequence = SequenceDataset(train, target='GHI', features=list(df.columns), memory=memory, horizon=horizon)
+val_sequence = SequenceDataset(val, target='GHI', features=list(df.columns), memory=memory, horizon=horizon)
+test_sequence = SequenceDataset(test, target='GHI', features=list(df.columns), memory=memory, horizon=horizon)
 ## Torch Dataloader
 
-train_data = DataLoader(train_sequence, batch_size=64)
-val_data = DataLoader(val_sequence, batch_size=64)
+train_data = DataLoader(train_sequence, batch_size=128)
+val_data = DataLoader(val_sequence, batch_size=128)
 test_data = DataLoader(test_sequence)
 
 
@@ -103,9 +122,9 @@ class SimpleLSTM(nn.Module):
 
 
 ## Training
-epochs = 40
+epochs = 5
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=16,
+model = SimpleLSTM(n_features=len(train_sequence.features), hidden_size=48,
                    num_layers=1,
                    dropout=0.1,
                    output_length=horizon)
@@ -162,8 +181,8 @@ with torch.no_grad():
         y_hat = model(x).unsqueeze(-1)
 
         # Calculate error
-        y_hat, y = transfomer.inverse_transform_target(y, y_hat)
-        error = loss_function(torch.tensor(y).float(), torch.tensor(y_hat).float())
+        y, y_hat = transformer.inverse_transform_target(y, y_hat)
+        error = loss_function(y, y_hat)
         temp_losses.append(error)
 
 test_error = np.mean(np.stack(temp_losses))
