@@ -56,3 +56,51 @@ class BayesianLSTM(nn.Module):
 
     def predict(self, X):
         return self(tensor(X, dtype=float32)).view(-1).detach().numpy()
+
+
+class LSTMEncoder(nn.Module):
+    def __init__(self, n_features, hidden_size, num_layers):
+        super(LSTMEncoder, self).__init__()
+        self.n_features = n_features
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+
+        self.lstm = nn.LSTM(n_features, hidden_size, num_layers, batch_first=True)
+
+    def forward(self, x):
+        out, hs = self.lstm(x)
+        return out, hs
+
+
+class LSTMDecoder(nn.Module):
+    def __init__(self, n_features, hidden_size, num_layers, output_length):
+        super(LSTMDecoder, self).__init__()
+        self.n_features = n_features
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+
+        self.lstm = nn.LSTM(n_features, hidden_size, num_layers, batch_first=True)
+        self.linear = nn.Linear(hidden_size, output_length)
+
+    def forward(self, x, hs):
+        lstm_out, _ = self.lstm(x, hs)
+        out = self.linear(lstm_out)
+        return out
+
+
+class LSTMEncoderDecoder(nn.Module):
+    def __init__(self, n_features, encoder_hidden_size, decoder_hidden_size, num_layers, output_length):
+        super(LSTMEncoderDecoder, self).__init__()
+        self.n_features = n_features
+        self.encoder_hidden_size = encoder_hidden_size
+        self.decoder_hidden_size = decoder_hidden_size
+        self.num_layers = num_layers
+        self.output_length = output_length
+
+        self.encoder = LSTMEncoder(n_features, encoder_hidden_size, num_layers)
+        self.decoder = LSTMDecoder(encoder_hidden_size, decoder_hidden_size, num_layers,output_length)
+
+    def forward(self, x1, x2):
+        encoder_out, encoder_hs = self.encoder(x1)
+        decoder_out = self.decoder(x2, encoder_hs)
+        return decoder_out

@@ -3,7 +3,7 @@ import pandas as pd
 from src.Datahandler.scaling import scale_data
 from src.Datahandler.prepare_data import split_data
 from src.Datahandler.SequenceDataset import make_torch_dataset
-from src.models.architecture import BayesianLSTM
+from src.models.architecture import BayesianLSTM, LSTMEncoderDecoder
 from src.models.train_model import train_model
 from src.models.test_model import test_model
 
@@ -11,9 +11,11 @@ warnings.simplefilter(action="ignore")
 # %% LOAD DATA
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
-df = pd.read_pickle(path)[:20000]
+df = pd.read_pickle(path)[:2000]
 
 # %% MODEL AND TRAINING PARAMETERS
+columns = ['GHI']
+df = df[columns]
 memory = 15
 horizon = 5
 batch = 64

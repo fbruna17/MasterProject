@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 
-class SequenceDataset:
+class SequenceDataset(Dataset):
     def __init__(self, dataframe, target, features, memory, horizon):
         self.features = features
         self.target = target
@@ -19,6 +19,18 @@ class SequenceDataset:
         _x = self.X[i: start_y, :]  # ':' means all columns
         _y = self.y[start_y: start_y + self.horizon]
         return _x, _y
+
+    
+class SubSequenceDataset(SequenceDataset):
+    def __init__(self):
+        super(SubSequenceDataset, self).__init__()
+
+    def __getitem__(self, i):
+        start_y = i + self.memory
+        _x = self.X[i: start_y, :]
+        _x2 = self.X[start_y - self.horizon + 1: start_y, :]# ':' means all columns
+        _y = self.y[start_y: start_y + self.horizon]
+        return _x, _x2, _y
 
 
 def make_torch_dataset(train, val, test, memory, horizon, batch, target):
