@@ -13,3 +13,7 @@ def generate_leads(df: DataFrame, series: Series, col_name, number_of_leads: int
     for i in range(1, number_of_leads):
         df[f"{col_name} t+{i}"] = series.shift(-i)
 
+def clean_data(df):
+    weather_copy = df[['Cloudopacity', 'DewPoint', 'Pressure', 'WindDir', 'WindVel', 'Pw', 'Tamb']]
+    df = df.loc[(df.Hour < 22) & (df.Hour > 5)]
+    return df

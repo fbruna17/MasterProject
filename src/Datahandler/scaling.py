@@ -28,3 +28,12 @@ class TimeSeriesTransformer:
     def inverse_transform_target(self, y, y_hat):
         return torch.tensor((y.numpy() * self.target_std) + self.target_mean).float(), \
                torch.tensor((y_hat.numpy() * self.target_std) + self.target_mean).float()
+
+
+def scale_data(train, val, test):
+    transformer = TimeSeriesTransformer()
+    transformer.standardizer_fit(train)
+    train = transformer.standardizer_transform(train)
+    val = transformer.standardizer_transform(val)
+    test = transformer.standardizer_transform(test)
+    return train, val, test, transformer
