@@ -14,18 +14,6 @@ df = pd.read_pickle(path)[:500]
 
 
 # %% Outlier Removal and Feature Extraction
-def generate_noise(series: pd.Series):
-    min_value = series.min()
-    max_value = series.max()
-    noise = series.apply(lambda x: x - 0.015 * ((min_value - max_value) * np.random.random() + min_value))
-    noise = np.maximum(noise, min_value)
-    return noise
-
-
-def generate_leads(df: pd.DataFrame, series: pd.Series, col_name, number_of_leads: int = 5):
-    for i in range(1, number_of_leads):
-        df[f"{col_name} t+{i}"] = series.shift(-i)
-
 
 weather_copy = df[['Cloudopacity', 'DewPoint', 'Pressure', 'WindDir', 'WindVel', 'Pw', 'Tamb']]
 df = df.loc[(df.Hour < 22) & (df.Hour > 5)]
