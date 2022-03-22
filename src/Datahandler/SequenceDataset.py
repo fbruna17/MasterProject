@@ -22,8 +22,8 @@ class SequenceDataset(Dataset):
 
     
 class SubSequenceDataset(SequenceDataset):
-    def __init__(self):
-        super(SubSequenceDataset, self).__init__()
+    def __init__(self, dataframe, target, features, memory, horizon):
+        super(SubSequenceDataset, self).__init__(dataframe, target, features, memory, horizon)
 
     def __getitem__(self, i):
         start_y = i + self.memory

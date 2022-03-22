@@ -84,7 +84,7 @@ class LSTMDecoder(nn.Module):
 
     def forward(self, x, hs):
         lstm_out, _ = self.lstm(x, hs)
-        out = self.linear(lstm_out)
+        out = self.linear(lstm_out[:, -1])
         return out
 
 
@@ -98,7 +98,7 @@ class LSTMEncoderDecoder(nn.Module):
         self.output_length = output_length
 
         self.encoder = LSTMEncoder(n_features, encoder_hidden_size, num_layers)
-        self.decoder = LSTMDecoder(encoder_hidden_size, decoder_hidden_size, num_layers,output_length)
+        self.decoder = LSTMDecoder(n_features, decoder_hidden_size, num_layers, output_length)
 
     def forward(self, x1, x2):
         encoder_out, encoder_hs = self.encoder(x1)
