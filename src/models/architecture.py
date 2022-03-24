@@ -56,3 +56,27 @@ class BayesianLSTM(nn.Module):
 
     def predict(self, X):
         return self(tensor(X, dtype=float32)).view(-1).detach().numpy()
+
+
+class PredNet(nn.Module):
+    def __init__(self, input_size, output_length, hidden_layer_1=128, hidden_layer_2=64, hidden_layer_3=16):
+        # default hidden layer sizes according to Uber-article
+        super(PredNet, self).__init__()
+        self.input_size = input_size
+        self.hidden_layer_1 = hidden_layer_1
+        self.hidden_layer_2 = hidden_layer_2
+        self.hidden_layer_3 = hidden_layer_3
+        self.output_length = output_length
+
+        self.network = nn.Sequential(
+            nn.Linear(input_size, hidden_layer_1),
+            nn.Tanh(),
+            nn.Linear(hidden_layer_1, hidden_layer_2),
+            nn.Tanh(),
+            nn.Linear(hidden_layer_2, hidden_layer_3),
+            nn.Tanh(),
+            nn.Linear(hidden_layer_3, output_length)
+        )
+
+    def forward(self, x):
+        return self.network(x)
