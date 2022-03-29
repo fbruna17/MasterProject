@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
@@ -59,48 +60,65 @@ class BayesianLSTM(nn.Module):
 
 
 class LSTMEncoder(nn.Module):
-    def __init__(self, n_features, hidden_size, num_layers):
+    def __init__(self, encoder_input, hidden_size, encoder_output, num_layers):
         super(LSTMEncoder, self).__init__()
-        self.n_features = n_features
+        self.encoder_input = encoder_input
         self.hidden_size = hidden_size
+        self.encoder_output = encoder_output
         self.num_layers = num_layers
 
-        self.lstm = nn.LSTM(n_features, hidden_size, num_layers, batch_first=True)
+        self.lstm1 = nn.LSTM(self.encoder_input, self.hidden_size, batch_first=True)
+        self.lstm2 = nn.LSTM(self.hidden_size, self.encoder_output, batch_first=True)
 
     def forward(self, x):
-        out, hs = self.lstm(x)
-        return out, hs
+        out, (hs, cs) = self.lstm1(x)
+        out, _ = self.lstm2(out)
+        return out, (hs, cs)
 
 
 class LSTMDecoder(nn.Module):
-    def __init__(self, n_features, hidden_size, num_layers, output_length):
+    def __init__(self, encoder_input, decoder_input, encoder_output, num_layers, horizon):
         super(LSTMDecoder, self).__init__()
-        self.n_features = n_features
-        self.hidden_size = hidden_size
+        self.encoder_input = encoder_input
+        self.encoder_output = encoder_output
+        self.decoder_input = decoder_input
+        self.horizon = horizon
         self.num_layers = num_layers
 
-        self.lstm = nn.LSTM(n_features, hidden_size, num_layers, batch_first=True)
-        self.linear = nn.Linear(hidden_size, output_length)
+        self.lstm = nn.LSTM(self.decoder_input, self.encoder_output, self.num_layers, batch_first=True)
+        self.linear = nn.Linear(self.encoder_output, self.horizon)
 
-    def forward(self, x, hs):
-        lstm_out, _ = self.lstm(x, hs)
-        out = self.linear(lstm_out[:, -1])
+    def forward(self, x2, out):
+        x_cat = torch.cat([x2, out], dim=1)
+        lstm_out, _ = self.lstm(x_cat)
+        out = self.linear(lstm_out)
         return out
 
 
 class LSTMEncoderDecoder(nn.Module):
-    def __init__(self, n_features, encoder_hidden_size, decoder_hidden_size, num_layers, output_length):
+    def __init__(self, encoder_input, encoder_output, decoder_input, hidden_size, num_layers, horizon=0):
         super(LSTMEncoderDecoder, self).__init__()
-        self.n_features = n_features
-        self.encoder_hidden_size = encoder_hidden_size
-        self.decoder_hidden_size = decoder_hidden_size
+        self.encoder_input = encoder_input
+        self.encoder_output = encoder_output
+        self.decoder_input = decoder_input
+        self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.output_length = output_length
+        self.horizon = horizon
 
-        self.encoder = LSTMEncoder(n_features, encoder_hidden_size, num_layers)
-        self.decoder = LSTMDecoder(n_features, decoder_hidden_size, num_layers, output_length)
+        self.encoder = LSTMEncoder(
+            encoder_input=self.encoder_input,
+            hidden_size=self.hidden_size,
+            encoder_output=self.encoder_output,
+            num_layers=self.num_layers
+        )
+        self.decoder = LSTMDecoder(
+            encoder_input=self.encoder_input,
+            decoder_input=self.decoder_input,
+            encoder_output=self.encoder_output,
+            num_layers=self.num_layers,
+            horizon=self.horizon)
 
     def forward(self, x1, x2):
-        encoder_out, encoder_hs = self.encoder(x1)
-        decoder_out = self.decoder(x2, encoder_hs)
+        out, (hs, cs) = self.encoder(x1)
+        decoder_out = self.decoder(x2, out)
         return decoder_out

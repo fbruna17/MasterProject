@@ -1,3 +1,4 @@
+import numpy
 import torch
 from torch.utils.data import Dataset, DataLoader
 
@@ -25,11 +26,13 @@ class SubSequenceDataset(SequenceDataset):
     def __init__(self, dataframe, target, features, memory, horizon):
         super(SubSequenceDataset, self).__init__(dataframe, target, features, memory, horizon)
 
+
     def __getitem__(self, i):
         start_y = i + self.memory
-        _x = self.X[i: start_y, :]
-        _x2 = self.X[start_y - self.horizon + 1: start_y, :]# ':' means all columns
+        _x = self.X[i: start_y]
+        _x2 = self.X[start_y - self.horizon: start_y]# ':' means all columns
         _y = self.y[start_y: start_y + self.horizon]
+        torch.equal(_x[-4:], _x2)
         return _x, _x2, _y
 
 

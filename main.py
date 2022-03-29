@@ -17,39 +17,9 @@ warnings.simplefilter(action="ignore")
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
 df = pd.read_pickle(path)[:2000]
 
+
 # %% MODEL AND TRAINING PARAMETERS
-columns = ['GHI']
-df = df[columns]
-memory = 15
-horizon = 5
-batch = 64
-target = "GHI"
-n_features = len(df.columns)
-latent_dim = 5
-learning_rate = 0.05
-EPOCHS = 10
-train_new_model = False
 
-data = DataLoader(SubSequenceDataset(dataframe=df, memory=memory, horizon=horizon, features=columns, target=target),
-                  batch_size=batch)
-
-model = LSTMEncoderDecoder(n_features, 16, 16, 1, horizon)
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-model.train()
-for e in range(50):
-    l = 0
-    for x1,x2,y in data:
-        y_hat = model(x1, x2)
-        loss = torch.sqrt(F.mse_loss(y_hat, y))
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        l += loss.detach()
-
-    if e % 5 == 0:
-        print(l / 2000)
 # # %% TRAIN, VALIDATION, TEST SPLIT
 # train, val, test = split_data(df)
 #
