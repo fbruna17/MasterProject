@@ -37,3 +37,9 @@ def scale_data(train, val, test):
     val = transformer.standardizer_transform(val)
     test = transformer.standardizer_transform(test)
     return train, val, test, transformer
+
+def scale_train(train):
+    transformer = TimeSeriesTransformer()
+    transformer.standardizer_fit(train)
+    train = transformer.standardizer_transform(train)
+    return train

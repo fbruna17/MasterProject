@@ -1,6 +1,4 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, MaxAbsScaler
+
 
 def split_data(df):
     split_train = int(len(df) * 0.8)
