@@ -7,12 +7,18 @@ from src.models.architecture import *
 from src.models.train_model import train_model
 from src.models.test_model import test_model
 from src.helpers import plot_losses, plot_predictions
+from src.features import build_features as bf
+
 
 warnings.simplefilter(action="ignore")
 # %% LOAD DATA
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
 df = pd.read_pickle(path)[:5000]
+
+# %% BUILD FEATURES
+df = bf.build_features(df)
+
 
 # %% TRAIN, VALIDATION, TEST SPLIT
 train, val, test = split_data(df)
@@ -61,8 +67,6 @@ training_params = {'epochs': 50,
                    'learning_rate': learning_rate,
                    'loss_function': F.mse_loss
                    }
-
-model = SimpleLSTM(n_features, 64, 32, horizon)
 
 # %% TRAIN
 
