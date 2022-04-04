@@ -9,6 +9,8 @@ from src.models.architecture import *
 from src.models.train_model import train_model
 from src.models.test_model import test_model
 from src.helpers import plot_losses, plot_predictions
+from src.features import build_features as bf
+
 
 warnings.simplefilter(action="ignore")
 # %% LOAD DATA
@@ -16,6 +18,12 @@ warnings.simplefilter(action="ignore")
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
 df = pd.read_pickle(path)[:30000]
 
+# %% BUILD FEATURES
+df = bf.build_features(df)
+
+
+# %% TRAIN, VALIDATION, TEST SPLIT
+train, val, test = split_data(df)
 column_order = ['GHI', 'Year', 'Month', 'Day', 'Hour', 'Tamb', 'Azimuth', 'Cloudopacity',
                 'DewPoint', 'Pw', 'Pressure', 'WindDir',
                 'WindVel', 'AlbedoDaily', 'Zenith']
