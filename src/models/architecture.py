@@ -8,60 +8,6 @@ from torch import tensor, zeros, float32
 from torch.nn.utils.rnn import PackedSequence
 
 
-class BayesianLSTM(nn.Module):
-
-    def __init__(self, n_features, output_length, batch_size):
-        super(BayesianLSTM, self).__init__()
-
-        self.batch_size = batch_size  # user-defined
-
-        self.hidden_size_1 = 16  # number of encoder cells (from paper)
-        self.hidden_size_2 = 8  # number of decoder cells (from paper)
-        self.stacked_layers = 2  # number of (stacked) LSTM layers for each stage
-        self.dropout_probability = 0.1  # arbitrary value (the paper suggests that performance is generally stable across all ranges)
-
-        self.lstm1 = nn.LSTM(n_features,
-                             self.hidden_size_1,
-                             num_layers=self.stacked_layers,
-                             batch_first=True)
-        self.lstm2 = nn.LSTM(self.hidden_size_1,
-                             self.hidden_size_2,
-                             num_layers=self.stacked_layers,
-                             batch_first=True)
-
-        self.fc = nn.Linear(self.hidden_size_2, output_length)
-        self.loss_fn = nn.MSELoss()
-
-    def forward(self, x):
-        batch_size, seq_len, _ = x.size()
-
-        hidden = self.init_hidden1(batch_size)
-        output, _ = self.lstm1(x, hidden)
-        output = F.dropout(output, p=self.dropout_probability, training=True)
-        state = self.init_hidden2(batch_size)
-        output, state = self.lstm2(output, state)
-        output = F.dropout(output, p=self.dropout_probability, training=True)
-        output = output[:, -1, :]  # take the last decoder cell's outputs
-        y_pred = self.fc(output)
-        return y_pred
-
-    def init_hidden1(self, batch_size):
-        hidden_state = Variable(zeros(self.stacked_layers, batch_size, self.hidden_size_1))
-        cell_state = Variable(zeros(self.stacked_layers, batch_size, self.hidden_size_1))
-        return hidden_state, cell_state
-
-    def init_hidden2(self, batch_size):
-        hidden_state = Variable(zeros(self.stacked_layers, batch_size, self.hidden_size_2))
-        cell_state = Variable(zeros(self.stacked_layers, batch_size, self.hidden_size_2))
-        return hidden_state, cell_state
-
-    def loss(self, pred, truth):
-        return self.loss_fn(pred, truth)
-
-    def predict(self, X):
-        return self(tensor(X, dtype=float32)).view(-1).detach().numpy()
-
-
 class LSTMEncoder(nn.Module):
     def __init__(self, encoder_input, hidden_size_1, hidden_size_2, encoder_output, num_layers, dropouto):
         super(LSTMEncoder, self).__init__()
@@ -93,17 +39,12 @@ class LSTMDecoder(nn.Module):
         self.decoder_output = decoder_output
         self.num_layers = num_layers
 
-        # 'lstm1': vd.LSTM(1, 2, dropouto=p, batch_first=True),
-        # 'lstm2': vd.LSTM(2, 2, dropouto=p, batch_first=True),
-        # 'lstm3': vd.LSTM(2, 1, dropouto=p, batch_first=True)
-
-        self.lstm1 = VariationalLSTM(self.decoder_input, self.hidden_size_1, self.num_layers, dropouto=self.dropout)
-        self.lstm2 = VariationalLSTM(self.hidden_size_1, self.hidden_size_2, self.num_layers, dropouto=self.dropout)
-        self.lstm3 = VariationalLSTM(self.hidden_size_2, self.decoder_output, self.num_layers, dropouto=self.dropout)
-
-        # self.lstm = VariationalLSTM(self.decoder_input, self.encoder_output, self.num_layers, dropouto=self.dropout,
-        #                             batch_first=True)
-        # self.linear = nn.Linear(self.encoder_output, self.horizon)
+        self.lstm1 = VariationalLSTM(self.decoder_input, self.hidden_size_1, self.num_layers, dropouto=self.dropout,
+                                     batch_first=True)
+        self.lstm2 = VariationalLSTM(self.hidden_size_1, self.hidden_size_2, self.num_layers, dropouto=self.dropout,
+                                     batch_first=True)
+        self.lstm3 = VariationalLSTM(self.hidden_size_2, self.decoder_output, self.num_layers, dropouto=self.dropout,
+                                     batch_first=True)
 
     def forward(self, x):
         out, _ = self.lstm1(x)
@@ -144,28 +85,19 @@ class LSTMEncoderDecoder(nn.Module):
             num_layers=num_layers,
             dropouto=dropout)
 
-        self.fc = nn.Linear(decoder_output, 32)
-        self.fc2 = nn.Linear(32, horizon)
-        #
-        # self.encoder = VariationalLSTM(
-        #     input_size=self.encoder_input,
-        #     hidden_size=self.hidden_size,
-        #     num_layers=self.num_layers,
-        # )
+        self.fc = nn.Linear(624, 4)
+        self.fc2 = nn.Linear(216, 4)
 
-    # def forward(self, x1, x2):
-    #     out, (hs, cs) = self.encoder(x1)
-    #     decoder_out = self.decoder(x2, out)
-    #     return decoder_out
     def forward(self, x):
-        out = self.encoder(x)
+        encoder_out = self.encoder(x)
 
-        x_auxiliary = x[:, :, -self.horizon:]
-        decoder_input = torch.cat([out, x_auxiliary], dim=2)
+        x_auxiliary = x[:, -self.horizon:, [0]]
+        decoder_input = torch.cat([encoder_out, x_auxiliary], dim=1)
 
         out = self.decoder(decoder_input)
+        out = out.reshape(out.shape[0], -1)
         out = self.fc(out)
-        out = self.fc2(out)
+        #out = self.fc2(out)
         return out
 
 
@@ -248,95 +180,42 @@ class VariationalLSTM(nn.LSTM):
         return self.output_drop(seq), state
 
 
-class VDEncoder(nn.Module):
-    def __init__(self, in_features, out_features, p):
-        super(VDEncoder, self).__init__()
-        self.model = nn.ModuleDict({
-            'lstm1': VariationalLSTM(in_features, 32, dropouto=p, batch_first=True),
-            'lstm2': VariationalLSTM(32, 8, dropouto=p, batch_first=True),
-            'lstm3': VariationalLSTM(8, out_features, dropouto=p, batch_first=True),
-            'relu': nn.ReLU()
-        })
-
-    def forward(self, x):
-        out, _ = self.model['lstm1'](x)
-        out, _ = self.model['lstm2'](out)
-        out, _ = self.model['lstm3'](out)
-        out = self.model['relu'](out)
-
-        return out
-
-
-class VDDecoder(nn.Module):
-    def __init__(self, p):
-        super(VDDecoder, self).__init__()
-        self.model = nn.ModuleDict({
-            'lstm1': VariationalLSTM(1, 2, dropouto=p, batch_first=True),
-            'lstm2': VariationalLSTM(2, 2, dropouto=p, batch_first=True),
-            'lstm3': VariationalLSTM(2, 1, dropouto=p, batch_first=True)
-        })
-
-    def forward(self, x):
-        out, _ = self.model['lstm1'](x)
-        out, _ = self.model['lstm2'](out)
-        out, _ = self.model['lstm3'](out)
-
-        return out
-
-
-class VDEncoderDecoder(nn.Module):
-    def __init__(self, in_features, input_steps, output_steps, p):
-        super(VDEncoderDecoder, self).__init__()
-        self.enc_in_features = in_features
-        self.input_steps = input_steps  # t in the paper
-        self.output_steps = output_steps  # f in the paper
-        self.enc_out_features = 1
-        self.traffic_col = 4
-        self.p = p
-
-        self.model = nn.ModuleDict({
-            'encoder': VDEncoder(self.enc_in_features, self.enc_out_features, self.p),
-            'decoder': VDDecoder(self.p),
-            'fc1': nn.Linear(self.input_steps + self.output_steps, 32),
-            'fc2': nn.Linear(32, self.output_steps)
-        })
-
-    def forward(self, x):
-        out = self.model['encoder'](x)
-
-        x_auxiliary = x[:, -self.output_steps:, [self.traffic_col]]
-        decoder_input = torch.cat([out, x_auxiliary], dim=1)
-
-        out = self.model['decoder'](decoder_input)
-        out = self.model['fc1'](out.view(-1, self.input_steps + self.output_steps))
-        out = self.model['fc2'](out)
-
-        return out
-
-
-class Predict(nn.Module):
-    def __init__(self, params, p, pretrained_encoder: nn.Module):
-        super(Predict, self).__init__()
+class EncoderPrediction(nn.Module):
+    def __init__(self, pretrained_encoder: nn.Module):
+        super(EncoderPrediction, self).__init__()
 
         self.encoder = pretrained_encoder.eval()
-        self.params = params
-        self.model = nn.Sequential(
-            nn.Linear(params['n_extracted_features'] + params['n_external_features'], params['predict_hidden_1']),
-            nn.Dropout(p),
-            nn.ReLU(),
-            nn.Dropout(p),
-            nn.Linear(params['predict_hidden_1'], params['predict_hidden_2']),
-            nn.ReLU(),
-            nn.Dropout(p),
-            nn.Linear(params['predict_hidden_2'], params['n_output_steps'])
-        )
+
 
     def forward(self, x):
         x_input, external = x
-        extracted = self.encoder(x_input.permute(0,2,1)).view(-1, self.params['n_extracted_features'])
-        x_concat = torch.cat([extracted, external], dim=-1)
-        out = self.model(x_concat)
+        out = self.encoder(x_input)
+
         return out
 
+class PredictionNet(nn.Module):
+    def __init__(self, params, dropout):
+        super(PredictionNet, self).__init__()
 
+        self.params = params
+        self.linear1 = nn.Linear(528, params['predict_hidden_1'])
+        self.dropout = nn.Dropout(dropout)
+        self.relu = nn.ReLU()
+        self.linear2 = nn.Linear(params['predict_hidden_1'], params['predict_hidden_2'])
+        self.linear3 = nn.Linear(params['predict_hidden_2'], params['n_output_steps'])
 
+    def forward(self, external, encoder_prediction):
+
+        x_concat = torch.cat([encoder_prediction, external], dim=2)
+        x_concat = x_concat.reshape(x_concat.shape[0], -1)
+
+        out = self.linear1(x_concat)
+        out = self.dropout(out)
+        out = self.relu(out)
+        out = self.dropout(out)
+        out = self.linear2(out)
+        out = self.relu(out)
+        out = self.dropout(out)
+        out = self.linear3(out)
+
+        return out
