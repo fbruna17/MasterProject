@@ -83,6 +83,54 @@ class LSTMEncoder(nn.Module):
         return out
 
 
+class LSTMCoder(nn.Module):
+    def __init__(self, **kwargs):
+        super(LSTMCoder, self).__init__()
+        self.input_size = kwargs.get('input_size', '')  # second parameter is a default value if key does not exist
+        self.hs_1 = kwargs.get('hs_1', 10)
+        self.hs_2 = kwargs.get('hs_2', 10)
+        self.output_size = kwargs.get('output_size', 10)
+        self.num_layers = kwargs.get('num_layers', 1)
+        self.dropout = kwargs.get('dropout', 0.)
+        self.batch_first = kwargs.get('batch_first', True)
+
+        self.lstm_1 = VariationalLSTM(self.input_size, self.hs_1, dropouto=self.dropout, batch_first=self.batch_first)
+        self.lstm_2 = VariationalLSTM(self.hs_1, self.hs_2, dropouto=self.dropout, batch_first=self.batch_first)
+        self.lstm_3 = VariationalLSTM(self.hs_2, self.output_size, dropouto=self.dropout, batch_first=self.batch_first)
+
+    def forward(self, x):
+        out, _ = self.lstm_1(x)
+        out, _ = self.lstm_2(out)
+        out, _ = self.lstm_3(out)
+        return out
+
+
+class LSTMEncoder1(LSTMCoder):
+    def __init__(self, **kwargs):
+        super(LSTMEncoder1, self).__init__(**kwargs)
+
+
+class LSTMDecoder1(LSTMCoder):
+    def __init__(self, **kwargs):
+        super(LSTMDecoder1, self).__init__(**kwargs)
+
+
+class LSMTEncoderDecoder1(nn.Module):
+    def __init__(self, encoder_params: dict, decoder_params: dict, fc_hidden_size: int, output_size: int, memory: int):
+        super(LSMTEncoderDecoder1, self).__init__()
+        self.encoder = LSTMEncoder1(**encoder_params)
+        self.decoder = LSTMDecoder1(**decoder_params)
+        self.fc_1 = nn.Linear(self.decoder.output_size * memory, fc_hidden_size)
+        self.fc_2 = nn.Linear(fc_hidden_size, output_size)
+
+    def forward(self, x):
+        encoder_out = self.encoder(x)
+        decoder_out = self.decoder(encoder_out)
+        fc1_out = self.fc_1(decoder_out.flatten(start_dim=1))
+        out = self.fc_2(fc1_out)
+        return out
+
+
 class LSTMDecoder(nn.Module):
     def __init__(self, decoder_input, hidden_size_1, hidden_size_2, num_layers, decoder_output, dropouto):
         super(LSTMDecoder, self).__init__()
@@ -339,4 +387,16 @@ class Predict(nn.Module):
         return out
 
 
+class SimpleLSTM(nn.Module):
+    def __init__(self, input_size, hs_1, hs_2, output_size):
+        super(SimpleLSTM, self).__init__()
+        self.lstm = nn.LSTM(input_size, hs_1, batch_first=True)
+        self.lstm2 = nn.LSTM(hs_1, hs_2)
+        self.fc = nn.Linear(hs_2, output_size)
+
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out, _ = self.lstm2(out)
+        out = self.fc(out[:, -1])
+        return out
 
