@@ -94,7 +94,7 @@ pred_params = {
     'output': horizon
 }
 
-pretrained = torch.load('enc_dec_pretrained.pkl')
+pretrained = torch.load('src/models/enc_dec_pretrained.pkl')
 
 pred_net = PredNet(encoder=pretrained.encoder, params=pred_params, dropout=0.1, n_univariate_featues=enc_features)
 
