@@ -18,7 +18,7 @@ def encode_cycle(df, columns):
 
 def build_features(df):
     lead_feature = ['Azimuth', 'Zenith']
-    cyclic_features = ['Hour', 'Year', 'Day', 'WindDir', 'Zenith', 'Azimuth']
+    cyclic_features = ['Month','Hour', 'Year', 'Day', 'WindDir', 'Zenith', 'Azimuth']
     number_of_leads = 4
     df = encode_cycle(df, cyclic_features)
     df = generate_leads(df, lead_feature, number_of_leads=number_of_leads)

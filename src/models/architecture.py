@@ -330,9 +330,10 @@ class PredictionNet(nn.Module):
 
 
 class PredNet(nn.Module):
-    def __init__(self, encoder, params, dropout):
+    def __init__(self, encoder, params, dropout, n_univariate_featues):
         super(PredNet, self).__init__()
         self.encoder = encoder.eval()
+        self.n_univariate_featues = n_univariate_featues
 
         self.fc1 = nn.Linear(params['input_size'], params['hs_1'])
         self.fc2 = nn.Linear(params['hs_1'], params['hs_2'])
@@ -340,19 +341,9 @@ class PredNet(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
 
-        self.sequence = nn.Sequential(
-            self.fc1,
-            self.dropout,
-            self.relu,
-            self.dropout,
-            self.fc2,
-            self.relu,
-            self.dropout,
-            self.fc3
-        )
 
     def forward(self, x):
-        encoder_input = x[:, :, :5] # all batches, all memory, first 5 features
+        encoder_input = x[:, :, :self.n_univariate_featues] # all batches, all memory, first 5 features
         encoder_output = self.encoder(encoder_input)
 
         pred_input = torch.cat([encoder_output, x], dim=2).flatten(start_dim=1) # Take all from x except GHI and take all output from encoder
@@ -365,7 +356,7 @@ class PredNet(nn.Module):
         out = self.relu(out)
         out = self.dropout(out)
         out = self.fc3(out)
-        # out = self.relu(out)
+        out = self.relu(out)
         return out
 
 

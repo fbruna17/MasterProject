@@ -1,16 +1,10 @@
 import warnings
 import pandas as pd
-
 from pipeline import TrainingParameters, DataParameters, Pipeline
-from src.Datahandler.scaling import scale_data
 from src.Datahandler.prepare_data import split_data
-from src.Datahandler.SequenceDataset import make_torch_dataset
-from src.models.architecture import *
-from src.models.train_model import train_model
-from src.models.test_model import test_model
-from src.helpers import plot_losses, plot_predictions
 from src.features import build_features as bf
-
+from src.helpers import plot_losses
+from src.models.architecture import *
 
 warnings.simplefilter(action="ignore")
 # %% LOAD DATA
@@ -21,15 +15,21 @@ df = pd.read_pickle(path)[:30000]
 # %% BUILD FEATURES
 df = bf.build_features(df)
 
-
 # %% TRAIN, VALIDATION, TEST SPLIT
 train, val, test = split_data(df)
-column_order = ['GHI', 'Year', 'Month', 'Day', 'Hour', 'Tamb', 'Azimuth', 'Cloudopacity',
-                'DewPoint', 'Pw', 'Pressure', 'WindDir',
-                'WindVel', 'AlbedoDaily', 'Zenith']
+column_order = ['GHI', 'Month_sin',
+                'Month_cos', 'Hour_sin',
+                'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos', 'Tamb', 'Cloudopacity', 'DewPoint', 'DHI',
+                'DNI',
+                'EBH', 'Pw', 'Pressure', 'WindVel', 'AlbedoDaily', 'WindDir_sin',
+                'WindDir_cos', 'Zenith_sin', 'Zenith_cos', 'Azimuth_sin', 'Azimuth_cos',
+                'Azimuth t+1', 'Azimuth t+2', 'Azimuth t+3', 'Zenith t+1', 'Zenith t+2',
+                'Zenith t+3']
 
 df = df[column_order]
-enc_df = df[['GHI', 'Year', 'Month', 'Day', 'Hour']]
+enc_df = df[['GHI', 'Month_sin',
+             'Month_cos', 'Hour_sin',
+             'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos']]
 
 # %% MODEL AND TRAINING PARAMETERS
 
@@ -94,9 +94,9 @@ pred_params = {
     'output': horizon
 }
 
-pretrained = torch.load('src/models/pretrained.pkl')
+pretrained = torch.load('enc_dec_pretrained.pkl')
 
-pred_net = PredNet(pretrained.encoder, pred_params, 0.1)
+pred_net = PredNet(encoder=pretrained.encoder, params=pred_params, dropout=0.1, n_univariate_featues=enc_features)
 
 optimizer = torch.optim.Adam(params=pred_net.parameters(), lr=learning_rate)
 
@@ -106,6 +106,8 @@ training_params = TrainingParameters(epochs=50,
 
 pred_pipeline = Pipeline(data=df, model=pred_net, data_params=data_params, training_params=training_params)
 mdl, losses = pred_pipeline.train(plot=True)
+
+plot_losses(losses)
 # # %% TEST
 #
 # test_results = test_model(trained_model, test, transformer)
