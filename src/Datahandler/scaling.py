@@ -1,6 +1,6 @@
 import pandas as pd
 import torch
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
 class TimeSeriesTransformer:
@@ -17,7 +17,7 @@ class TimeSeriesTransformer:
         ys = data[self.target_col]
         self.target_mean = ys.mean()
         self.target_std = ys.std(ddof=0)
-        self.standardizer = StandardScaler()
+        self.standardizer = MinMaxScaler()
         self.standardizer.fit(data)
 
     def standardizer_transform(self, data):
@@ -30,7 +30,7 @@ class TimeSeriesTransformer:
                torch.tensor((y_hat.numpy() * self.target_std) + self.target_mean).float()
 
 
-def scale_data(train, val, test):
+def scale_data(train, val, test) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
     transformer = TimeSeriesTransformer()
     transformer.standardizer_fit(train)
     train = transformer.standardizer_transform(train)

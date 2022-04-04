@@ -12,7 +12,7 @@ from src.helpers import rmse
 def train_model1(model, learning_rate, EPOCHS, train_dataset):
     optimizer = Adam(model.parameters(), lr=learning_rate)
 
-    model.train()
+    model.train_data()
 
     for e in range(EPOCHS):
         error = 0

@@ -120,14 +120,19 @@ class LSMTEncoderDecoder1(nn.Module):
         super(LSMTEncoderDecoder1, self).__init__()
         self.encoder = LSTMEncoder1(**encoder_params)
         self.decoder = LSTMDecoder1(**decoder_params)
-        self.fc_1 = nn.Linear(self.decoder.output_size * memory, fc_hidden_size)
-        self.fc_2 = nn.Linear(fc_hidden_size, output_size)
+        self.horizon = output_size
+        self.fc_1 = nn.Linear(self.decoder.output_size * (memory + self.horizon), output_size)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
         encoder_out = self.encoder(x)
-        decoder_out = self.decoder(encoder_out)
-        fc1_out = self.fc_1(decoder_out.flatten(start_dim=1))
-        out = self.fc_2(fc1_out)
+
+        x_aux = x[:, -self.horizon:, [0]]
+
+        decoder_input = torch.cat([encoder_out, x_aux], dim=1)
+        decoder_out = self.decoder(decoder_input)
+        out = self.fc_1(decoder_out.flatten(start_dim=1))
+        out = self.relu(out)
         return out
 
 
@@ -188,7 +193,6 @@ class LSTMEncoderDecoder(nn.Module):
             dropouto=dropout)
 
         self.fc = nn.Linear(624, 4)
-        self.fc2 = nn.Linear(216, 4)
 
     def forward(self, x):
         encoder_out = self.encoder(x)
@@ -295,10 +299,12 @@ class EncoderPrediction(nn.Module):
 
         return out
 
+
 class PredictionNet(nn.Module):
-    def __init__(self, params, dropout):
+    def __init__(self, encoder, params, dropout):
         super(PredictionNet, self).__init__()
 
+        self.encoder = encoder
         self.params = params
         self.linear1 = nn.Linear(528, params['predict_hidden_1'])
         self.dropout = nn.Dropout(dropout)
@@ -320,6 +326,46 @@ class PredictionNet(nn.Module):
         out = self.dropout(out)
         out = self.linear3(out)
 
+        return out
+
+
+class PredNet(nn.Module):
+    def __init__(self, encoder, params, dropout):
+        super(PredNet, self).__init__()
+        self.encoder = encoder.eval()
+
+        self.fc1 = nn.Linear(params['input_size'], params['hs_1'])
+        self.fc2 = nn.Linear(params['hs_1'], params['hs_2'])
+        self.fc3 = nn.Linear(params['hs_2'], params['output'])
+        self.dropout = nn.Dropout(dropout)
+        self.relu = nn.ReLU()
+
+        self.sequence = nn.Sequential(
+            self.fc1,
+            self.dropout,
+            self.relu,
+            self.dropout,
+            self.fc2,
+            self.relu,
+            self.dropout,
+            self.fc3
+        )
+
+    def forward(self, x):
+        encoder_input = x[:, :, :5] # all batches, all memory, first 5 features
+        encoder_output = self.encoder(encoder_input)
+
+        pred_input = torch.cat([encoder_output, x], dim=2).flatten(start_dim=1) # Take all from x except GHI and take all output from encoder
+
+        out = self.fc1(pred_input)
+        out = self.dropout(out)
+        out = self.relu(out)
+        out = self.dropout(out)
+        out = self.fc2(out)
+        out = self.relu(out)
+        out = self.dropout(out)
+        out = self.fc3(out)
+        # out = self.relu(out)
         return out
 
 

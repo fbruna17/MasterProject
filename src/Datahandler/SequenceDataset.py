@@ -35,7 +35,7 @@ class SubSequenceDataset(SequenceDataset):
 
 
 def make_torch_dataset(train: torch.Tensor, val: torch.Tensor, test: torch.Tensor, memory: int, horizon: int,
-                       batch: int, target: str):
+                       batch: int, target: str, drop_last=True):
     train_sequence = SequenceDataset(train,
                                      target=target,
                                      features=list(train.columns),
@@ -52,8 +52,8 @@ def make_torch_dataset(train: torch.Tensor, val: torch.Tensor, test: torch.Tenso
                                     memory=memory,
                                     horizon=horizon)
 
-    train_dataset = DataLoader(train_sequence, batch_size=batch)
-    val_dataset = DataLoader(val_sequence, batch_size=batch)
-    test_dataset = DataLoader(test_sequence, batch_size=1)
+    train_dataset = DataLoader(train_sequence, batch_size=batch, drop_last=drop_last)
+    val_dataset = DataLoader(val_sequence, batch_size=batch, drop_last=drop_last)
+    test_dataset = DataLoader(test_sequence, batch_size=1, drop_last=drop_last)
 
     return train_dataset, val_dataset, test_dataset
