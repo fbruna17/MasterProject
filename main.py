@@ -94,9 +94,14 @@ pred_params = {
     'output': horizon
 }
 
-pretrained = torch.load('src/models/enc_dec_pretrained.pkl')
+path = 'src/models/enc_dec_pretrained.pkl'
+pretrained = torch.load(path)
 
-pred_net = PredNet(encoder=pretrained.encoder, params=pred_params, dropout=0.1, n_univariate_featues=enc_features)
+# pretrained_pipeline = Pipeline(data=enc_df, model=pretrained, data_params=data_params, training_params=training_params)
+
+# mu, eta, ys = pretrained_pipeline.mc_dropout(100)
+
+pred_net = PredNet(encoder=pretrained.encoder, params=pred_params, dropout=0.2, n_univariate_featues=enc_features)
 
 optimizer = torch.optim.Adam(params=pred_net.parameters(), lr=learning_rate)
 
@@ -108,6 +113,8 @@ pred_pipeline = Pipeline(data=df, model=pred_net, data_params=data_params, train
 mdl, losses = pred_pipeline.train(plot=True)
 
 plot_losses(losses)
+
+mus, etas, ys = pred_pipeline.mc_dropout(100)
 # # %% TEST
 #
 # test_results = test_model(trained_model, test, transformer)
