@@ -48,6 +48,11 @@ test = transfomer.standardizer_transform(test)
 
 # %%
 
+
+
+
+
+
 seq = torch.tensor(weather_features.values).float()
 train_data = DataLoader(seq, batch_size=64)
 

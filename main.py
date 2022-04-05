@@ -3,6 +3,7 @@ import pandas as pd
 from pipeline import TrainingParameters, DataParameters, Pipeline
 from src.Datahandler.prepare_data import split_data
 from src.features import build_features as bf
+from src.models.weather_forecasting import WeatherForecasting, LSTNet
 from src.helpers import plot_losses
 from src.models.architecture import *
 
@@ -10,6 +11,8 @@ warnings.simplefilter(action="ignore")
 # %% LOAD DATA
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
+df = pd.read_pickle(path)
+df = df.drop(columns="Minute")
 df = pd.read_pickle(path)[:30000]
 
 # %% BUILD FEATURES
@@ -31,16 +34,24 @@ enc_df = df[['GHI', 'Month_sin',
              'Month_cos', 'Hour_sin',
              'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos']]
 
+weather_df = df[['Month_sin',
+                'Month_cos', 'Hour_sin',
+                'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos', 'Tamb', 'Cloudopacity', 'DewPoint', 'DHI',
+                'DNI',
+                'EBH', 'Pw', 'Pressure', 'WindVel', 'AlbedoDaily', 'WindDir_sin',
+                'WindDir_cos', 'Zenith_sin', 'Zenith_cos', 'Azimuth_sin', 'Azimuth_cos']]
+
 # %% MODEL AND TRAINING PARAMETERS
 
-memory = 48
-horizon = 4
-batch = 192
+memory = 24
+horizon = 5
+batch = 128
 n_features = len(df.columns)
+target = 'Cloudopacity'
+learning_rate = 0.005
+dropout = 0.
 enc_features = len(enc_df.columns)
-target = 'GHI'
-learning_rate = 0.001
-dropout = 0.4
+weather_features = len(weather_df.columns)
 
 encoder_params = {
     'input_size': enc_features,
@@ -57,6 +68,12 @@ decoder_params = {
     'dropout': dropout
 }
 
+weather_params = {
+
+}
+
+# %% SCALING and TORCH DATALOADER
+
 # %% MODEL INSTANTIATION
 
 data_params = DataParameters(memory=memory, horizon=horizon, batch_size=batch, target=target)
@@ -64,7 +81,12 @@ data_params = DataParameters(memory=memory, horizon=horizon, batch_size=batch, t
 model = LSMTEncoderDecoder1(encoder_params=encoder_params, decoder_params=decoder_params, memory=memory,
                             fc_hidden_size=624, output_size=horizon)
 
-optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
+weather_model = WeatherForecasting(input_size=n_features, hidden_size1=32, hidden_size2=48, output_size=horizon)
+
+weather_pipeline =
+
+
+optimizer = torch.optim.Adam(params=weather_model.parameters(), lr=learning_rate)
 
 training_params = TrainingParameters(epochs=50,
                                      loss_function=F.mse_loss,

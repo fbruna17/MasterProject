@@ -68,8 +68,8 @@ def train_model(model: torch.nn.Module, training_dataloader: DataLoader, trainin
         losses['validation'].append(np.mean(val_loss))
 
         epochs.set_description(
-            f"Epoch {epoch} of {len(epochs)} \t | \t Training Loss: {losses['train'][-1]} \t "
-            f"Validation Loss: {losses['validation'][-1]}")
+            f"Epoch {epoch} of {len(epochs)} \t | \t Training Loss: {losses['train'][-1].round(5)} \t "
+            f"Validation Loss: {losses['validation'][-1].round(5)}")
 
         if epoch % 5 == 0:
             horizon = y.shape[1]
