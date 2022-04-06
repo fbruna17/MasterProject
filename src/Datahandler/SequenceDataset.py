@@ -1,6 +1,21 @@
+import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+class WeatherSequence(Dataset):
+    def __init__(self, dataframe, features, memory):
+        self.dataframe = dataframe
+        self.features = features
+        self.memory = memory
+        self.X = torch.tensor(dataframe.values).float()
+
+    def __len__(self):
+        return self.X.shape[0] - self.memory
+
+    def __getitem__(self, i):
+        start_y = i + self.memory
+        _x = self.X[i: start_y, :]  # ':' means all columns
+        return _x
 
 class SequenceDataset(Dataset):
     def __init__(self, dataframe, target, features, memory, horizon):
@@ -57,3 +72,7 @@ def make_torch_dataset(train: torch.Tensor, val: torch.Tensor, test: torch.Tenso
     test_dataset = DataLoader(test_sequence, batch_size=1, drop_last=drop_last)
 
     return train_dataset, val_dataset, test_dataset
+
+
+def make_weather_dataset(data: pd.DataFrame, memory, batch, drop_last=True):
+    return DataLoader(WeatherSequence(dataframe=data, features=len(data.columns), memory=memory), batch_size=batch, drop_last=drop_last)

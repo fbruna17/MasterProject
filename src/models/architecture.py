@@ -373,3 +373,31 @@ class SimpleLSTM(nn.Module):
         out = self.fc(out[:, -1])
         return out
 
+class WeatherPredictor(nn.Module):
+    def __init__(self,
+                 tamb_net,
+                 cloud_opacity_net,
+                 dew_point_net,
+                 pw_net,
+                 pressure_net,
+                 wind_vel_net,
+                 ):
+        super(WeatherPredictor, self).__init__()
+        self.tamb_net = tamb_net
+        self.cloud_opacity_net = cloud_opacity_net
+        self.dew_point_net = dew_point_net
+        self.pw_net = pw_net
+        self.pressure_net = pressure_net
+        self.wind_vel_net = wind_vel_net
+
+    def forward(self, x):
+        tamb = self.tamb_net(x)
+        cloud_op = self.cloud_opacity_net(x)
+        dewpoint = self.dew_point_net(x)
+        pw = self.pw_net(x)
+        pressure = self.pressure_net(x)
+        wind_vel = self.wind_vel_net(x)
+        return torch.concat((tamb, cloud_op, dewpoint, pw, pressure, wind_vel), dim=1)
+
+
+
