@@ -3,7 +3,10 @@ import pandas as pd
 import torch
 from matplotlib import pyplot as plt
 from torch import nn
+from torch.nn import functional as F
+from torch.utils.data import DataLoader
 from tqdm import tqdm
+from properscoring import crps_gaussian
 
 from src.Datahandler.SequenceDataset import make_torch_dataset
 from src.Datahandler.prepare_data import split_data
@@ -91,7 +94,7 @@ class Pipeline:
             for x, y in self.val_data:
                 x, y = x.to(device), y.to(device)
                 out = model(x)
-                loss = loss_fn(out, y)
+                loss = torch.sqrt(loss_fn(out, y))
                 val_loss.append(loss.item())
 
             losses['validation'].append(np.mean(val_loss))
@@ -154,11 +157,104 @@ class Pipeline:
                 y_etas.append(n_eta)
                 ys.append(y)
 
-
+                cprs = crps_gaussian(y, mu=n_mu, sig=np.sqrt(n_eta))
 
         return y_mus, y_etas, ys
 
 
+def prepare_data(data, data_params):
+    split = split_data(data)
+    train, val, test, transformer = scale_data(*split)
+    train_data, val_data, test_data = make_torch_dataset(train, val, test,
+                                                         data_params.memory,
+                                                         data_params.horizon,
+                                                         data_params.batch_size,
+                                                         data_params.target)
+    return (train_data, val_data), test_data, transformer
 
 
+def train_model(model, data, training_params, plot=False, plot_freq=5):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    optimiser = training_params.optimiser
+    loss_fn = training_params.loss_function
+    losses = {'train': [], 'validation': []}
 
+    epochs = tqdm(range(1, training_params.epochs + 1))
+
+    train, val = data
+
+    for epoch in epochs:
+        model.train()
+        epoch_loss = []
+        for i, (x, y) in enumerate(train):
+            x, y = x.to(device), y.to(device)
+            out = model(x)
+
+            optimiser.zero_grad()
+            loss = loss_fn(out, y)
+            loss.backward()
+            optimiser.step()
+
+            epoch_loss.append(loss.item())
+
+        losses['train'].append(np.mean(epoch_loss))
+
+        # VALIDATION
+        model.eval()
+        val_loss = []
+        for x, y in val:
+            x, y = x.to(device), y.to(device)
+            out = model(x)
+            loss = loss_fn(out, y)
+            val_loss.append(loss.item())
+
+        losses['validation'].append(np.mean(val_loss))
+
+        epochs.set_description(
+            f"Epoch {epoch} of {len(epochs)} \t | \t Training Loss: {round(losses['train'][-1], 4)} \t "
+            f"Validation Loss: {round(losses['validation'][-1], 4)} \t"
+            f"Progress: {0 if len(losses['train']) < 2 else - round(losses['train'][-2] - losses['train'][-1], 4)}")
+
+        if epoch % plot_freq == 0:
+            horizon = y.shape[1]
+            plt.plot(y[::horizon].flatten())
+            plt.plot(out[::horizon].flatten().detach())
+            plt.show()
+
+    return model, losses
+
+
+def test_model(model, data, transformer, loss_function=F.mse_loss):
+    model.eval()
+    data_table = {'True': [], 'Predictions': [], 'Loss': []}
+    with torch.no_grad():
+        for x, y in data:
+            y_hat = model(x)
+
+            y, y_hat = transformer.inverse_transform_target(y, y_hat)
+            error = loss_function(y_hat, y)
+
+            data_table['True'].append(y.squeeze().tolist())
+            data_table['Predictions'].append(y_hat.detach().squeeze().tolist())
+            data_table['Loss'].append(error.item())
+
+    return data_table
+
+
+def monte_carlo(model, x, y, n_samples, transformer):
+    model.train()
+    with torch.no_grad():
+
+        y_hats = []
+        for n in range(n_samples):
+
+            y_hat = model(x)
+            y, y_hat = transformer.inverse_transform_target(y, y_hat)
+
+            y_hats.append(y_hat.detach().numpy())
+
+        mu = np.mean(y_hats, axis=0)
+        eta = np.std(y_hats, axis=0)
+
+    return mu, eta, y

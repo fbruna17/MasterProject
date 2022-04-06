@@ -18,7 +18,7 @@ class BayesianLSTM(nn.Module):
         self.hidden_size_1 = 16  # number of encoder cells (from paper)
         self.hidden_size_2 = 8  # number of decoder cells (from paper)
         self.stacked_layers = 2  # number of (stacked) LSTM layers for each stage
-        self.dropout_probability = 0.1  # arbitrary value (the paper suggests that performance is generally stable across all ranges)
+        self.dropout_probability = 0.4  # arbitrary value (the paper suggests that performance is generally stable across all ranges)
 
         self.lstm1 = nn.LSTM(n_features,
                              self.hidden_size_1,
@@ -31,6 +31,7 @@ class BayesianLSTM(nn.Module):
 
         self.fc = nn.Linear(self.hidden_size_2, output_length)
         self.loss_fn = nn.MSELoss()
+        self.relu = nn.ReLU()
 
     def forward(self, x):
         batch_size, seq_len, _ = x.size()
@@ -365,11 +366,17 @@ class SimpleLSTM(nn.Module):
         super(SimpleLSTM, self).__init__()
         self.lstm = nn.LSTM(input_size, hs_1, batch_first=True)
         self.lstm2 = nn.LSTM(hs_1, hs_2)
+        self.dropout = nn.Dropout(0.2)
         self.fc = nn.Linear(hs_2, output_size)
+        self.relu=nn.ReLU()
 
     def forward(self, x):
         out, _ = self.lstm(x)
+        out = self.dropout(out)
+        out = self.relu(out)
         out, _ = self.lstm2(out)
+        out = self.dropout(out)
         out = self.fc(out[:, -1])
+        out = self.relu(out)
         return out
 

@@ -1,7 +1,9 @@
 import warnings
 import pandas as pd
-from pipeline import TrainingParameters, DataParameters, Pipeline
-from src.Datahandler.prepare_data import split_data
+import torch.optim
+from matplotlib import pyplot as plt
+
+from pipeline import TrainingParameters, DataParameters, Pipeline, train_model, test_model, prepare_data, monte_carlo
 from src.features import build_features as bf
 from src.helpers import plot_losses
 from src.models.architecture import *
@@ -16,7 +18,6 @@ df = pd.read_pickle(path)[:30000]
 df = bf.build_features(df)
 
 # %% TRAIN, VALIDATION, TEST SPLIT
-train, val, test = split_data(df)
 column_order = ['GHI', 'Month_sin',
                 'Month_cos', 'Hour_sin',
                 'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos', 'Tamb', 'Cloudopacity', 'DewPoint', 'DHI',
@@ -35,7 +36,7 @@ enc_df = df[['GHI', 'Month_sin',
 
 memory = 48
 horizon = 4
-batch = 192
+batch = 64
 n_features = len(df.columns)
 enc_features = len(enc_df.columns)
 target = 'GHI'
@@ -59,64 +60,31 @@ decoder_params = {
 
 # %% MODEL INSTANTIATION
 
-data_params = DataParameters(memory=memory, horizon=horizon, batch_size=batch, target=target)
+data_parameters = DataParameters(memory=memory, horizon=horizon, batch_size=batch, target=target)
 
-model = LSMTEncoderDecoder1(encoder_params=encoder_params, decoder_params=decoder_params, memory=memory,
-                            fc_hidden_size=624, output_size=horizon)
+train, test, transformer = prepare_data(df, data_parameters)
 
-optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
+x,y = test.dataset[10]
 
-training_params = TrainingParameters(epochs=50,
-                                     loss_function=F.mse_loss,
-                                     optimiser=optimizer)
+blstm = BayesianLSTM(n_features=len(df.columns), output_length=horizon, batch_size=batch)
 
-encoder_decoder_pipeline = Pipeline(data=enc_df, model=model, data_params=data_params, training_params=training_params)
+lstm = SimpleLSTM(input_size=len(df.columns), output_size=horizon, hs_1=64, hs_2=32)
 
-params = {
-    'n_extracted_features': encoder_params['output_size'],
-    'n_external_features': len(df.columns),
-    'predict_hidden_1': 288,
-    'predict_hidden_2': 64,
-    'n_output_steps': horizon,
-}
+optimiser = torch.optim.Adam(params=lstm.parameters(), lr=learning_rate)
 
-# pred_net = PredictionNet(params, dropout)
-train_new_model = False
+training_parameters = TrainingParameters(epochs=10, optimiser=optimiser, loss_function=F.mse_loss)
 
-if train_new_model:
-    trained_model, losses = encoder_decoder_pipeline.train(plot=True)
-    encoder_decoder_pipeline.save('enc_dec_pretrained.pkl')
+trained, losses = train_model(model=lstm, data=train, training_params=training_parameters, plot=True)
 
-pred_params = {
-    'input_size': (encoder_params['output_size'] + n_features) * memory,
-    'hs_1': 128,
-    'hs_2': 64,
-    'output': horizon
-}
+test_results = test_model(trained, test, transformer)
 
-path = 'src/models/enc_dec_pretrained.pkl'
-pretrained = torch.load(path)
 
-# pretrained_pipeline = Pipeline(data=enc_df, model=pretrained, data_params=data_params, training_params=training_params)
+mu, eta, y_inversed = monte_carlo(trained, x.unsqueeze(0), y, 100, transformer)
 
-# mu, eta, ys = pretrained_pipeline.mc_dropout(100)
+plt.plot(y_inversed, label='y')
+plt.plot(mu.flatten(), label='mu')
+plt.plot((mu + 2 * eta).flatten(), label='mu+2')
+plt.plot((mu - 2 * eta).flatten(), label='mu-2')
+plt.legend()
+plt.show()
 
-pred_net = PredNet(encoder=pretrained.encoder, params=pred_params, dropout=0.2, n_univariate_featues=enc_features)
-
-optimizer = torch.optim.Adam(params=pred_net.parameters(), lr=learning_rate)
-
-training_params = TrainingParameters(epochs=50,
-                                     loss_function=F.mse_loss,
-                                     optimiser=optimizer)
-
-pred_pipeline = Pipeline(data=df, model=pred_net, data_params=data_params, training_params=training_params)
-mdl, losses = pred_pipeline.train(plot=True)
-
-plot_losses(losses)
-
-mus, etas, ys = pred_pipeline.mc_dropout(100)
-# # %% TEST
-#
-# test_results = test_model(trained_model, test, transformer)
-#
-# plot_predictions(test_results, 100, horizon)
