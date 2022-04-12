@@ -11,7 +11,7 @@ from src.models.architecture import *
 warnings.simplefilter(action="ignore")
 # %% LOAD DATA
 
-path = 'data/raw/5min.pkl'
+path = 'data/raw/15min.pkl'
 df = pd.read_pickle(path)[:5000]
 
 # %% BUILD FEATURES
