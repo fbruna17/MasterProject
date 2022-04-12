@@ -6,7 +6,6 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from torch import tensor, zeros, float32
 from torch.nn.utils.rnn import PackedSequence
-from weatherforecast import make_weather_prediction
 
 #
 # class BayesianLSTM(nn.Module):

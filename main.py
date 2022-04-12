@@ -7,7 +7,6 @@ from src.Datahandler.SequenceDataset import make_torch_dataset
 from src.features import build_features as bf
 from src.helpers import plot_losses
 from src.models.architecture import *
-from weatherforecast import train_weather_forecast
 
 warnings.simplefilter(action="ignore")
 # %% LOAD DATA
