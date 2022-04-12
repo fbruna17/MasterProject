@@ -12,7 +12,7 @@ warnings.simplefilter(action="ignore")
 # %% LOAD DATA
 
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
-df = pd.read_pickle(path)
+df = pd.read_pickle(path)[:10000]
 df = df.drop(columns="Minute")
 df = bf.build_features(df)
 column_order = ['GHI', 'Month_sin',
@@ -32,33 +32,36 @@ df = df[column_order]
 # %% BUILD FEATURES
 memory = 24
 horizon = 5
-batch = 1024
+batch = 128
 prefix = 'src/models/weather_model_'
+pretrained = False
+
+
 weather_nets = [torch.load(prefix + 'Tamb'),
                 torch.load(prefix + 'Cloudopacity'),
-                 torch.load(prefix + 'DewPoint'),
-                 torch.load(prefix + 'Pw'),
-                 torch.load(prefix + 'Pressure'),
-                 torch.load(prefix + 'WindVel')]
+                torch.load(prefix + 'DewPoint'),
+                torch.load(prefix + 'Pw'),
+                torch.load(prefix + 'Pressure'),
+                torch.load(prefix + 'WindVel')]
 
 weather_df = df[['Month_sin',
-                'Month_cos', 'Hour_sin',
+                    'Month_cos', 'Hour_sin',
                 'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos', 'Tamb', 'Cloudopacity', 'DewPoint', 'DHI',
                 'DNI',
                 'EBH', 'Pw', 'Pressure', 'WindVel', 'AlbedoDaily', 'WindDir_sin',
                 'WindDir_cos', 'Zenith_sin', 'Zenith_cos', 'Azimuth_sin', 'Azimuth_cos']]
 
 weather_pred = WeatherPredictor(*weather_nets)
-#
+
 weather_feat_params = DataParameters(memory=memory, horizon=horizon, batch_size=1, target="GHI")
-#
+
 weather_pred_pipe = WeatherPipeline(data=weather_df,
                                     model=weather_pred,
                                     data_params=weather_feat_params,
                                     horizon=horizon)
-#
-dff = weather_pred_pipe.make_preprocessed_dataset()
-df = pd.concat([dff, df[memory:]], axis=1)
+
+#dff = weather_pred_pipe.make_preprocessed_dataset()
+#df = pd.concat([df[memory:], dff], axis=1)
 
 
 # %% TRAIN, VALIDATION, TEST SPLIT
@@ -169,7 +172,8 @@ params = {
 
 
 # pred_net = PredictionNet(params, dropout)
-train_new_model = True
+train_new_model = False
+
 
 if train_new_model:
     trained_model, losses = encoder_decoder_pipeline.train(plot=True, scheduler2=model_scheduler2)

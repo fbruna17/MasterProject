@@ -1,11 +1,15 @@
+import math
 from typing import Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 from torch import tensor, zeros, float32
 from torch.nn.utils.rnn import PackedSequence
+from torch.nn.utils import weight_norm
+from entmax import entmax15, entmax_bisect
 
 
 class BayesianLSTM(nn.Module):
@@ -343,12 +347,37 @@ class PredNet(nn.Module):
 
 
     def forward(self, x):
-        encoder_input = x[:, :, :self.n_univariate_featues] # all batches, all memory, first 5 features
+        encoder_input = x[:, :, : self.n_univariate_featues] # all batches, all memory, first 5 features
         encoder_output = self.encoder(encoder_input)
 
         pred_input = torch.cat([encoder_output, x], dim=2).flatten(start_dim=1) # Take all from x except GHI and take all output from encoder
 
         out = self.fc1(pred_input)
+        out = self.dropout(out)
+        out = self.relu(out)
+        out = self.dropout(out)
+        out = self.fc2(out)
+        out = self.relu(out)
+        out = self.dropout(out)
+        out = self.fc3(out)
+        out = self.relu(out)
+        return out
+
+
+class PredNet2(nn.Module):
+    def __init__(self, decoder, params, dropout):
+        super(PredNet2, self).__init__()
+        self.dropout = dropout
+        self.params = params
+        self.decoder = decoder.eval()
+        self.fc1 = nn.Linear(params['input_size'], params['hs_1'])
+        self.fc2 = nn.Linear(params['hs_1'], params['hs_2'])
+        self.fc3 = nn.Linear(params['hs_2'], params['output'])
+        self.dropout = nn.Dropout(dropout)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        out = self.fc1(x)
         out = self.dropout(out)
         out = self.relu(out)
         out = self.dropout(out)
@@ -373,6 +402,158 @@ class SimpleLSTM(nn.Module):
         out = self.fc(out[:, -1])
         return out
 
+
+class TemporalBlock(nn.Module):
+    def __init__(self,
+                 input_size: int,
+                 output_size: int,
+                 kernel_size: int,
+                 stride,
+                 dilation,
+                 padding: int,
+                 dropout: float):
+        super(TemporalBlock, self).__init__()
+        self.conv1 = weight_norm(nn.Conv2d(input_size,
+                                           output_size,
+                                           (1, kernel_size),
+                                           stride=stride,
+                                           padding=0,
+                                           dilation=dilation))
+        self.pad = nn.ZeroPad2d((padding, 0, 0, 0))
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(dropout)
+        self.conv2 = weight_norm(nn.Conv2d(output_size,
+                                           output_size,
+                                           (1, kernel_size),
+                                           stride=stride,
+                                           padding=0,
+                                           dilation=dilation))
+        self.net = nn.Sequential(self.pad,
+                                 self.conv1,
+                                 self.relu,
+                                 self.dropout,
+                                 self.pad,
+                                 self.conv2,
+                                 self.relu,
+                                 self.dropout)
+        self.downsample = nn.Conv1d(in_channels=input_size,
+                                    out_channels=output_size,
+                                    kernel_size=1) if input_size != output_size else None
+        self.relu = nn.ReLU()
+        self.init_weights()
+
+    def init_weights(self):
+        self.conv1.weight.data.normal_(0, 0.01)
+        self.conv2.weight.data.normal_(0, 0.01)
+        if self.downsample:
+            self.downsample.weight.data.normal_(0, 0.01)
+
+    def forward(self, x):
+        out = self.net(x)
+        res = x if self.downsample is None else self.downsample(x)
+        return self.relu(out + res)
+
+
+class TemporalConvolutionalNetwork(nn.Module):
+    def __init__(self,
+                 input_size: int,
+                 num_channels: list,
+                 kernel_size: int = 2,
+                 dropout: float = 0.2):
+        super(TemporalConvolutionalNetwork, self).__init__()
+        layers = []
+        num_levels = len(num_channels)
+        for i in range(num_levels):
+            dilation_size = 2 ** i
+            input_channels = input_size if i == 0 else num_channels[i-1]
+            output_channels = num_channels[i]
+            layers += [TemporalBlock(input_channels,
+                                     output_channels,
+                                     kernel_size,
+                                     stride=1,
+                                     dilation=dilation_size,
+                                     padding=(kernel_size-1) * dilation_size,
+                                     dropout=dropout)]
+        self.net = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class TCNModel(nn.Module):
+    def __init__(self, input_size, output_size, num_channels: list, kernel_size, dropout=0.2):
+        super(TCNModel, self).__init__()
+        self.tcn = TemporalConvolutionalNetwork(input_size, num_channels, kernel_size, dropout)
+        self.dropout = nn.Dropout(dropout)
+        self.output_size = output_size
+        self.out_layer = nn.Linear(num_channels[-1], self.output_size)
+
+    def forward(self, x):
+        return self.out_layer(self.dropout(self.tcn(x)[:, :, : -self.output_size]))
+
+
+class TCNEncoder(nn.Module):
+    def __init__(self,
+                 encoder,
+                 encoder_univariate_features,
+                 sequence_length,
+                 encoder_output_size,
+                 past_covariates_size,
+                 output_size,
+                 kernel_size,
+                 dropout):
+        super(TCNEncoder, self).__init__()
+        self.encoder_univariate_features = encoder_univariate_features
+        self.encoder = encoder.eval()
+        self.encoder_input_size = sequence_length
+        self.tcn = TCNModel(input_size=encoder_output_size + past_covariates_size,
+                            num_channels=[self.encoder_input_size] * int(np.ceil(np.log2(sequence_length/(kernel_size - 1) + 1))),
+                            output_size=output_size,
+                            kernel_size=kernel_size,
+                            dropout=dropout)
+
+
+    def forward(self, x):
+        encoder_input = x[:, :, : self.encoder_univariate_features]  # all batches, all memory, first 5 features
+        encoder_output = self.encoder.encoder(encoder_input)
+        tcn_input = torch.concat((encoder_output, x), dim=2)
+        tcn_output = self.tcn(tcn_input)
+        return tcn_output
+
+class TCNDecoder(nn.Module):
+    def __init__(self,
+                 encoder_output_size,
+                 horizon,
+                 kernel_size,
+                 sequence_length,
+                 dropout):
+        super(TCNDecoder, self).__init__()
+        self.horizon = horizon
+        self.tcn = TCNModel(input_size=encoder_output_size + horizon,
+                            num_channels=[sequence_length] * int(np.ceil(np.log2(sequence_length/(kernel_size - 1) + 1))),
+                            output_size=horizon,
+                            kernel_size=kernel_size,
+                            dropout=dropout)
+
+    def forward(self, x):
+        return self.tcn(x)
+
+
+class TCNEncoderDecoderModel(nn.Module):
+    def __init__(self, encoder, decoder, weather_predictor):
+        super(TCNEncoderDecoderModel, self).__init__()
+        self.weather_predictor = weather_predictor
+        self.encoder = encoder
+        self.decoder = decoder
+
+    def forward(self, x):
+        encoder_out = self.encoder(x)
+        weather_out = self.weather_predictor(x[:, :, 13 : ])
+        decoder_in = torch.concat((encoder_out, weather_out.unsqueeze(-1)), 1)
+        decoder_out = self.decoder(decoder_in)
+        return decoder_out
+
+
 class WeatherPredictor(nn.Module):
     def __init__(self,
                  tamb_net,
@@ -381,7 +562,7 @@ class WeatherPredictor(nn.Module):
                  pw_net,
                  pressure_net,
                  wind_vel_net,
-                 ):
+                 as_feats=False):
         super(WeatherPredictor, self).__init__()
         self.tamb_net = tamb_net
         self.cloud_opacity_net = cloud_opacity_net
@@ -389,6 +570,7 @@ class WeatherPredictor(nn.Module):
         self.pw_net = pw_net
         self.pressure_net = pressure_net
         self.wind_vel_net = wind_vel_net
+        self.as_feats = as_feats
 
     def forward(self, x):
         tamb = self.tamb_net(x)
@@ -397,7 +579,39 @@ class WeatherPredictor(nn.Module):
         pw = self.pw_net(x)
         pressure = self.pressure_net(x)
         wind_vel = self.wind_vel_net(x)
-        return torch.concat((tamb, cloud_op, dewpoint, pw, pressure, wind_vel), dim=1)
+        return torch.concat((tamb, cloud_op, dewpoint, pw, pressure, wind_vel), dim=1) if not self.as_feats else torch.concat((tamb, cloud_op, dewpoint, pw, pressure, wind_vel), dim=2)
 
 
+class PastCovariatesEncoder(nn.Module):
+    def __init__(self, input_size, hidden_size, encoder_out_feat,  output_size, encoder, univar_features):
+        super(PastCovariatesEncoder, self).__init__()
+        self.univar_features = univar_features
+        self.encoder = encoder.eval()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.lstm = nn.LSTM(input_size=input_size + encoder_out_feat, hidden_size=hidden_size)
+        self.linear = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        encoder_input = x[:, :, : self.univar_features]
+        encoder_out = self.encoder.encoder(encoder_input)
+        past_covar_input = torch.concat((encoder_out, x), dim=-1)
+        out, _ = self.lstm(past_covar_input)
+        out = self.linear(out)
+        return out
+
+class FutureCovariatesDecoder(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, weather_features):
+        super(FutureCovariatesDecoder, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.weather_features = weather_features
+        self.lstm = nn.LSTM(input_size=input_size + weather_features, hidden_size=hidden_size)
+        self.linear = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        return self.linear(out)
 
