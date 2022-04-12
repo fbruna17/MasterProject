@@ -108,6 +108,7 @@ class Pipeline:
                 if epoch % 5 == 0:
                     plt.plot(y[::self.horizon].flatten()[:100])
                     plt.plot(out[::self.horizon].flatten()[:100].detach())
+                    plt.ylim(0,1)
                     plt.show()
         self.model = model
         return model, losses
@@ -164,7 +165,7 @@ class Pipeline:
 
 def prepare_data(data, data_params):
     split = split_data(data)
-    train, val, test, transformer = scale_data(*split)
+    train, val, test, transformer = scale_data(*split, data_params.target)
     train_data, val_data, test_data = make_torch_dataset(train, val, test,
                                                          data_params.memory,
                                                          data_params.horizon,
@@ -218,8 +219,12 @@ def train_model(model, data, training_params, plot=False, plot_freq=5):
 
         if epoch % plot_freq == 0:
             horizon = y.shape[1]
-            plt.plot(y[::horizon].flatten())
-            plt.plot(out[::horizon].flatten().detach())
+            var = 10
+            vlines = list(range(var, y.shape[0], horizon))
+            for l in vlines:
+                plt.axvline(l, linestyle='--', linewidth=.1, color='r')
+            plt.plot(y[var::horizon].flatten())
+            plt.plot(out[var::horizon].flatten().detach())
             plt.show()
 
     return model, losses
@@ -242,7 +247,7 @@ def test_model(model, data, transformer, loss_function=F.mse_loss):
     return data_table
 
 
-def monte_carlo(model, x, y, n_samples, transformer):
+def monte_carlo(model, x, y, n_samples, transformer, lower_quantile=0.05, upper_quantile=0.95):
     model.train()
     with torch.no_grad():
 
@@ -250,11 +255,16 @@ def monte_carlo(model, x, y, n_samples, transformer):
         for n in range(n_samples):
 
             y_hat = model(x)
-            y, y_hat = transformer.inverse_transform_target(y, y_hat)
+            # y_inversed, y_hat = transformer.inverse_transform_target(y, y_hat)
 
             y_hats.append(y_hat.detach().numpy())
 
         mu = np.mean(y_hats, axis=0)
         eta = np.std(y_hats, axis=0)
 
-    return mu, eta, y
+        y_hats = np.array(y_hats).squeeze()
+        lower = np.quantile(y_hats, lower_quantile, axis=0)
+        median = np.quantile(y_hats, 0.5, axis=0)
+        upper = np.quantile(y_hats, upper_quantile, axis=0)
+
+    return lower, median, upper, y

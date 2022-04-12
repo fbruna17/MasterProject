@@ -1,5 +1,6 @@
 from typing import Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -10,26 +11,25 @@ from torch.nn.utils.rnn import PackedSequence
 
 class BayesianLSTM(nn.Module):
 
-    def __init__(self, n_features, output_length, batch_size):
+    def __init__(self, n_features, hs_1, hs_2, output_length, batch_size, dropout):
         super(BayesianLSTM, self).__init__()
 
+        self.hs_1 = hs_1
+        self.hs_2 = hs_2
         self.batch_size = batch_size  # user-defined
-
-        self.hidden_size_1 = 16  # number of encoder cells (from paper)
-        self.hidden_size_2 = 8  # number of decoder cells (from paper)
         self.stacked_layers = 2  # number of (stacked) LSTM layers for each stage
-        self.dropout_probability = 0.4  # arbitrary value (the paper suggests that performance is generally stable across all ranges)
+        self.dropout_probability = dropout  # arbitrary value (the paper suggests that performance is generally stable across all ranges)
 
         self.lstm1 = nn.LSTM(n_features,
-                             self.hidden_size_1,
+                             self.hs_1,
                              num_layers=self.stacked_layers,
                              batch_first=True)
-        self.lstm2 = nn.LSTM(self.hidden_size_1,
-                             self.hidden_size_2,
+        self.lstm2 = nn.LSTM(self.hs_1,
+                             self.hs_2,
                              num_layers=self.stacked_layers,
                              batch_first=True)
 
-        self.fc = nn.Linear(self.hidden_size_2, output_length)
+        self.fc = nn.Linear(self.hs_2, output_length)
         self.loss_fn = nn.MSELoss()
         self.relu = nn.ReLU()
 
@@ -47,13 +47,13 @@ class BayesianLSTM(nn.Module):
         return y_pred
 
     def init_hidden1(self, batch_size):
-        hidden_state = Variable(zeros(self.stacked_layers, batch_size, self.hidden_size_1))
-        cell_state = Variable(zeros(self.stacked_layers, batch_size, self.hidden_size_1))
+        hidden_state = Variable(zeros(self.stacked_layers, batch_size, self.hs_1))
+        cell_state = Variable(zeros(self.stacked_layers, batch_size, self.hs_1))
         return hidden_state, cell_state
 
     def init_hidden2(self, batch_size):
-        hidden_state = Variable(zeros(self.stacked_layers, batch_size, self.hidden_size_2))
-        cell_state = Variable(zeros(self.stacked_layers, batch_size, self.hidden_size_2))
+        hidden_state = Variable(zeros(self.stacked_layers, batch_size, self.hs_2))
+        cell_state = Variable(zeros(self.stacked_layers, batch_size, self.hs_2))
         return hidden_state, cell_state
 
     def loss(self, pred, truth):
@@ -204,7 +204,7 @@ class LSTMEncoderDecoder(nn.Module):
         out = self.decoder(decoder_input)
         out = out.reshape(out.shape[0], -1)
         out = self.fc(out)
-        #out = self.fc2(out)
+        # out = self.fc2(out)
         return out
 
 
@@ -287,12 +287,29 @@ class VariationalLSTM(nn.LSTM):
         return self.output_drop(seq), state
 
 
+class SimpleVarLSTM(nn.Module):
+    def __init__(self, input_size, hs, output_size, dropout, batch_first=True):
+        super(SimpleVarLSTM, self).__init__()
+        self.input_size = input_size
+        self.hs = hs
+        self.output_size = output_size
+        self.dropout = dropout
+        self.batch_first = batch_first
+        self.lstm = VariationalLSTM(self.input_size, self.hs, dropouto=self.dropout, batch_first=self.batch_first)
+        self.linear = nn.Linear(self.hs, self.output_size)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out = self.linear(out[:, -1])
+        out = self.relu(out)
+        return out
+
 class EncoderPrediction(nn.Module):
     def __init__(self, pretrained_encoder: nn.Module):
         super(EncoderPrediction, self).__init__()
 
         self.encoder = pretrained_encoder.eval()
-
 
     def forward(self, x):
         x_input, external = x
@@ -314,7 +331,6 @@ class PredictionNet(nn.Module):
         self.linear3 = nn.Linear(params['predict_hidden_2'], params['n_output_steps'])
 
     def forward(self, external, encoder_prediction):
-
         x_concat = torch.cat([encoder_prediction, external], dim=2)
         x_concat = x_concat.reshape(x_concat.shape[0], -1)
 
@@ -342,12 +358,12 @@ class PredNet(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
 
-
     def forward(self, x):
-        encoder_input = x[:, :, :self.n_univariate_featues] # all batches, all memory, first 5 features
+        encoder_input = x[:, :, :self.n_univariate_featues]  # all batches, all memory, first 5 features
         encoder_output = self.encoder(encoder_input)
 
-        pred_input = torch.cat([encoder_output, x], dim=2).flatten(start_dim=1) # Take all from x except GHI and take all output from encoder
+        pred_input = torch.cat([encoder_output, x], dim=2).flatten(
+            start_dim=1)  # Take all from x except GHI and take all output from encoder
 
         out = self.fc1(pred_input)
         out = self.dropout(out)
@@ -362,13 +378,13 @@ class PredNet(nn.Module):
 
 
 class SimpleLSTM(nn.Module):
-    def __init__(self, input_size, hs_1, hs_2, output_size):
+    def __init__(self, input_size, hs_1, hs_2, output_size, dropout):
         super(SimpleLSTM, self).__init__()
-        self.lstm = nn.LSTM(input_size, hs_1, batch_first=True)
-        self.lstm2 = nn.LSTM(hs_1, hs_2)
-        self.dropout = nn.Dropout(0.2)
+        self.lstm = nn.GRU(input_size, hs_1, batch_first=True)
+        self.lstm2 = nn.GRU(hs_1, hs_2)
+        self.dropout = nn.Dropout(dropout)
         self.fc = nn.Linear(hs_2, output_size)
-        self.relu=nn.ReLU()
+        self.relu = nn.ReLU()
 
     def forward(self, x):
         out, _ = self.lstm(x)
@@ -380,3 +396,51 @@ class SimpleLSTM(nn.Module):
         out = self.relu(out)
         return out
 
+
+class SimpleGru(nn.Module):
+    def __init__(self, input_size, hs, output_size):
+        super(SimpleGru, self).__init__()
+        self.gru = nn.GRU(input_size, hs, batch_first=True, num_layers=1, dropout=0.2)
+        self.linear = nn.Linear(hs, output_size)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        out, _ = self.gru(x)
+        out = self.linear(out[:, -1])
+        # out = self.relu(out)
+        return out
+
+
+class VI(nn.Module):
+    def __init__(self, input_size=1, hs_1=20, hs_2=10, output_size=1):
+        super().__init__()
+
+        self.input_size = input_size
+        self.hs_1 = hs_1
+        self.hs_2 = hs_2
+        self.output_size = output_size
+        self.q_mu = nn.Sequential(
+            nn.Linear(self.input_size, self.hs_1),
+            nn.ReLU(),
+            nn.Linear(self.hs_1, self.hs_2),
+            nn.ReLU(),
+            nn.Linear(self.hs_2, self.output_size)
+        )
+        self.q_log_var = nn.Sequential(
+            nn.Linear(self.input_size, self.hs_1),
+            nn.ReLU(),
+            nn.Linear(self.hs_1, self.hs_2),
+            nn.ReLU(),
+            nn.Linear(self.hs_2, self.output_size)
+        )
+
+    def reparameterize(self, mu, log_var):
+        # std can not be negative, thats why we use log variance
+        sigma = torch.exp(0.5 * log_var) + 1e-5
+        eps = torch.randn_like(sigma)
+        return mu + sigma * eps
+
+    def forward(self, x):
+        mu = self.q_mu(x)
+        log_var = self.q_log_var(x)
+        return self.reparameterize(mu, log_var), mu, log_var

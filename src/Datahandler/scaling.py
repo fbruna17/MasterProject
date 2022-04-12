@@ -29,9 +29,12 @@ class TimeSeriesTransformer:
         return torch.tensor((y.numpy() * self.target_std) + self.target_mean).float(), \
                torch.tensor((y_hat.numpy() * self.target_std) + self.target_mean).float()
 
+    # X_std = (X - X.min(axis=0)) / (X.max(axis=0) - X.min(axis=0))
+    # X_scaled = X_std * (max - min) + min
 
-def scale_data(train, val, test) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
-    transformer = TimeSeriesTransformer()
+
+def scale_data(train, val, test, target='GHI') -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
+    transformer = TimeSeriesTransformer(target_col=target)
     transformer.standardizer_fit(train)
     train = transformer.standardizer_transform(train)
     val = transformer.standardizer_transform(val)
