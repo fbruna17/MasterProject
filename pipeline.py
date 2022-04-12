@@ -31,6 +31,7 @@ class Pipeline:
                  training_params: TrainingParameters, target: str = "GHI"):
         self.data = data
         self.model = model
+
         self.data_params = data_params
         self.training_params = training_params
 
@@ -165,9 +166,6 @@ class WeatherPipeline:
                 ) for feature, i in zip(features, [0, 5, 9, 14, 19, 24])])
 
             _temp = np.vstack((_temp, out))
-
-
-
         df = pd.DataFrame(data=_temp, columns=columns, index=self.index)
         return df
 
