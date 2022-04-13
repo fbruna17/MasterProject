@@ -31,7 +31,7 @@ def train_model1(model, learning_rate, EPOCHS, train_dataset):
 
 
 def train_model(model: torch.nn.Module, training_dataloader: DataLoader, training_params: dict,
-          validation_dataloader: DataLoader = None):
+    validation_dataloader: DataLoader = None):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     optimiser = torch.optim.Adam(lr=training_params['learning_rate'], params=model.parameters())

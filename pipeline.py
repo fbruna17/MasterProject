@@ -28,7 +28,7 @@ class TrainingParameters:
 
 class Pipeline:
     def __init__(self, data: pd.DataFrame, model: nn.Module, data_params: DataParameters,
-                 training_params: TrainingParameters, target: str = "GHI"):
+                 training_params: TrainingParameters, target):
         self.data = data
         self.model = model
 
@@ -63,11 +63,19 @@ class Pipeline:
         losses = {'train': [], 'validation': []}
 
         epochs = tqdm(range(1, self.training_params.epochs + 1))
-
+        model.train()
+        skip = False
         for epoch in epochs:
-            model.train()
+            if epoch % 5 == 0:
+                skip = True
             epoch_loss = []
             for i, (x, y) in enumerate(self.train_data):
+                if skip:
+                    out = model(x)
+                    loss = torch.sqrt((loss_fn(out, y)))
+                    epoch_loss.append(loss.item())
+                    skip = False
+                    break
                 x, y = x.to(device), y.to(device)
                 out = model(x)
 
@@ -102,7 +110,7 @@ class Pipeline:
                 f"Progress: {0 if len(losses['train'])<2 else - round(losses['train'][-2] - losses['train'][-1], 4)}")
 
             if plot:
-                if epoch % 5 == 0:
+                if epoch % 25 == 0:
                     plt.plot(y[::self.data_params.horizon].flatten()[:100])
                     plt.plot(out[::self.data_params.horizon].flatten()[:100].detach())
                     plt.show()
@@ -111,63 +119,6 @@ class Pipeline:
 
     def save(self, filepath):
         torch.save(self.model, filepath)
-
-
-class WeatherPipeline:
-    def __init__(self, data, model, data_params, horizon):
-        self.data = data
-        self.index = data.index[data_params.memory:]
-        self.features = data.columns
-        self.model = model
-        self.data_params = data_params
-        self.horizon = horizon
-        self.transformer = None
-
-        self.prepare_data()
-
-    def prepare_data(self):
-        self.transformer = MinMaxScaler()
-        self.data = self.transformer.fit_transform(self.data)
-        self.weather_scales = {k:v for k, v in zip(
-            ("Tamb", "Cloudopacity", "DewPoint", "Pw", "Pressure", "WindVel"),
-            ((self.transformer.data_min_[8], self.transformer.data_max_[8]),
-            (self.transformer.data_min_[9], self.transformer.data_max_[9]),
-            (self.transformer.data_min_[10], self.transformer.data_max_[10]),
-            (self.transformer.data_min_[14], self.transformer.data_max_[14]),
-            (self.transformer.data_min_[15], self.transformer.data_max_[15]),
-            (self.transformer.data_min_[16], self.transformer.data_max_[16])
-             ))}
-
-
-        self.data = pd.DataFrame(data=self.data, columns=self.features)
-
-        self.data = make_weather_dataset(data=self.data,
-                                         memory=self.data_params.memory,
-                                         batch=3000,
-                                         drop_last=False)
-
-    def make_preprocessed_dataset(self):
-        model = self.model
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model.to(device)
-        features = ["Tamb", "Cloudopacity", "DewPoint", "Pw", "Pressure", "WindVel"]
-        columns = [f"{f}_{i}" for f in features for i in range(1, self.horizon + 1)]
-        _temp = np.zeros((0, len(columns)))
-        for x in self.data:
-            out = model(x)
-            out = out.detach().numpy()
-            out = np.hstack([
-                inverse_transform_column_range(
-                    array=out,
-                    col_start=i,
-                    col_end= i + self.data_params.horizon,
-                    min_val=self.weather_scales[feature][0],
-                    max_val=self.weather_scales[feature][1]
-                ) for feature, i in zip(features, [0, 5, 9, 14, 19, 24])])
-
-            _temp = np.vstack((_temp, out))
-        df = pd.DataFrame(data=_temp, columns=columns, index=self.index)
-        return df
 
 
 def inverse_transform_column_range(array, col_start, col_end, min_val, max_val):

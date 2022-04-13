@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from torch import tensor, zeros, float32
 from torch.nn.utils.rnn import PackedSequence
 
+
 #
 # class BayesianLSTM(nn.Module):
 #
@@ -94,14 +95,17 @@ class LSTMCoder(nn.Module):
         self.dropout = kwargs.get('dropout', 0.)
         self.batch_first = kwargs.get('batch_first', True)
 
+        self.lstm = nn.LSTM(dropout=0.0, num_layers=1, batch_first=True, hidden_size=self.hs_1, input_size=self.input_size)
+        self.lstm1 = nn.LSTM(dropout=0.0, num_layers=1, batch_first=True, hidden_size=self.hs_2, input_size=self.hs_1)
         self.lstm_1 = VariationalLSTM(self.input_size, self.hs_1, dropouto=self.dropout, batch_first=self.batch_first)
         self.lstm_2 = VariationalLSTM(self.hs_1, self.hs_2, dropouto=self.dropout, batch_first=self.batch_first)
         self.lstm_3 = VariationalLSTM(self.hs_2, self.output_size, dropouto=self.dropout, batch_first=self.batch_first)
 
     def forward(self, x):
-        out, _ = self.lstm_1(x)
-        out, _ = self.lstm_2(out)
-        out, _ = self.lstm_3(out)
+        out, _ = self.lstm(x)
+        out, _ = self.lstm1(out)
+        #out, _ = self.lstm_2(out)
+        #out, _ = self.lstm_3(out)
         return out
 
 
@@ -114,22 +118,27 @@ class LSTMDecoder1(LSTMCoder):
     def __init__(self, **kwargs):
         super(LSTMDecoder1, self).__init__(**kwargs)
 
+
 class WeatherEncoderDecoder(nn.Module):
-    def __init__(self, encoder_params: dict, decoder_params: dict, fc_hidden_size: int, output_size: int, memory: int):
+    def __init__(self, encoder_params: dict, decoder_params: dict, output_size: int, memory: int):
         super(WeatherEncoderDecoder, self).__init__()
         self.encoder = LSTMEncoder1(**encoder_params)
         self.decoder = LSTMDecoder1(**decoder_params)
+        self.memory = memory
         self.horizon = output_size
-        self.fc_1 = nn.Linear(self.decoder.output_size * memory, output_size)
+        self.fc_1 = nn.Linear(self.encoder.hs_2 * memory, output_size)
+        self.fc_2 = nn.Linear((self.encoder.hs_2 * memory) // 2, output_size)
         self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(0.1)
 
     def forward(self, x):
         encoder_out = self.encoder(x)
-        decoder_out = self.decoder(encoder_out)
-        out = decoder_out.flatten(start_dim=1)
+        #decoder_out = self.decoder(encoder_out)
+        out = encoder_out.flatten(start_dim=1)
         out = self.fc_1(out)
         out = self.relu(out)
         return out
+
 
 class LSMTEncoderDecoder1(nn.Module):
     def __init__(self, encoder_params: dict, decoder_params: dict, fc_hidden_size: int, output_size: int, memory: int):
@@ -137,19 +146,21 @@ class LSMTEncoderDecoder1(nn.Module):
         self.encoder = LSTMEncoder1(**encoder_params)
         self.decoder = LSTMDecoder1(**decoder_params)
         self.horizon = output_size
-        self.fc_1 = nn.Linear(self.decoder.output_size * (memory + self.horizon), output_size)
+        self.fc_1 = nn.Linear(self.encoder.hs_2 * memory, output_size)
         self.relu = nn.ReLU()
 
     def forward(self, x):
         encoder_out = self.encoder(x)
 
-        x_aux = x[:, -self.horizon:, [0]]
+        #x_aux = x[:, -self.horizon:, [0]]
 
-        decoder_input = torch.cat([encoder_out, x_aux], dim=1)
-        decoder_out = self.decoder(decoder_input)
-        out = self.fc_1(decoder_out.flatten(start_dim=1))
+        #decoder_input = torch.cat([encoder_out, x_aux], dim=1)
+        #decoder_out = self.decoder(decoder_input)
+        out = encoder_out.flatten(start_dim=1)
+        out = self.fc_1(out)
         out = self.relu(out)
         return out
+
 
 #
 # class LSTMDecoder(nn.Module):
@@ -308,7 +319,6 @@ class EncoderPrediction(nn.Module):
 
         self.encoder = pretrained_encoder.eval()
 
-
     def forward(self, x):
         x_input, external = x
         out = self.encoder(x_input)
@@ -365,16 +375,39 @@ class PredNet(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
 
-
     def forward(self, x):
-        encoder_input = x[:, :, :self.n_univariate_featues] # all batches, all memory, first 5 features
+        encoder_input = x[:, :, :self.n_univariate_featues]  # all batches, all memory, first 5 features
         encoder_output = self.encoder(encoder_input)
-        w_x = x[:,:,-24:]
-        weather_out = torch.concat([self.cloud_op_encoder(w_x), self.dew_point_encoder(w_x), self.pressure_net_encoder(w_x), self.pw_net_encoder(w_x), self.tamb_net_encoder(w_x), self.wind_vel_encoder(w_x)], dim=2)
-        print("hi")
-        pred_input = torch.cat([encoder_output, x, weather_out], dim=2).flatten(start_dim=1) # Take all from x except GHI and take all output from encoder
+        w_x = x[:, :, -24:]
+        weather_out = torch.concat(
+            [self.cloud_op_encoder(w_x), self.dew_point_encoder(w_x), self.pressure_net_encoder(w_x),
+             self.pw_net_encoder(w_x), self.tamb_net_encoder(w_x), self.wind_vel_encoder(w_x)], dim=2)
+        pred_input = torch.cat([encoder_output, x, weather_out], dim=2).flatten(
+            start_dim=1)  # Take all from x except GHI and take all output from encoder
 
         out = self.fc1(pred_input)
+        out = self.dropout(out)
+        out = self.relu(out)
+        out = self.dropout(out)
+        out = self.fc2(out)
+        out = self.relu(out)
+        out = self.dropout(out)
+        out = self.fc3(out)
+        out = self.relu(out)
+        return out
+
+class SimplePredNet(nn.Module):
+    def __init__(self, dropout, params):
+        super(SimplePredNet, self).__init__()
+        self.fc1 = nn.Linear(params['input_size'], params['hs_1'])
+        self.fc2 = nn.Linear(params['hs_1'], params['hs_2'])
+        self.fc3 = nn.Linear(params['hs_2'], params['output'])
+        self.dropout = nn.Dropout(dropout)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = x.flatten(start_dim=1)
+        out = self.fc1(x)
         out = self.dropout(out)
         out = self.relu(out)
         out = self.dropout(out)
@@ -398,6 +431,7 @@ class SimpleLSTM(nn.Module):
         out, _ = self.lstm2(out)
         out = self.fc(out[:, -1])
         return out
+
 
 class WeatherPredictor(nn.Module):
     def __init__(self,
@@ -425,6 +459,3 @@ class WeatherPredictor(nn.Module):
         wind_vel = self.wind_vel_net(x).unsqueeze(dim=2)
 
         return torch.concat((tamb, cloud_op, dewpoint, pw, pressure, wind_vel), dim=2)
-
-
-

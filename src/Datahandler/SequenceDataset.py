@@ -49,7 +49,7 @@ class SubSequenceDataset(SequenceDataset):
         return _x, _x2, _y
 
 
-def make_torch_dataset(train: torch.Tensor, val: torch.Tensor, test: torch.Tensor, memory: int, horizon: int,
+def make_torch_dataset(train, val, test, memory: int, horizon: int,
                        batch: int, target: str, drop_last=True):
     train_sequence = SequenceDataset(train,
                                      target=target,
