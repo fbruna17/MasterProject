@@ -369,8 +369,8 @@ class PredNet(nn.Module):
         self.weather_pred = weather_pred
         self.n_univariate_featues = n_univariate_featues
 
-        self.fc1 = nn.Linear(params['input_size'], params['hs_1'])
-        self.fc2 = nn.Linear(params['hs_1'], params['hs_2'])
+        self.fc1 = nn.Linear(params['input_size'], params['output'])
+        self.fc2 = nn.Linear(params['hs_1'], params['output'])
         self.fc3 = nn.Linear(params['hs_2'], params['output'])
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
@@ -378,7 +378,7 @@ class PredNet(nn.Module):
     def forward(self, x):
         encoder_input = x[:, :, :self.n_univariate_featues]  # all batches, all memory, first 5 features
         encoder_output = self.encoder(encoder_input)
-        w_x = x[:, :, -24:]
+        w_x = x[:, :, 1:25]
         weather_out = torch.concat(
             [self.cloud_op_encoder(w_x), self.dew_point_encoder(w_x), self.pressure_net_encoder(w_x),
              self.pw_net_encoder(w_x), self.tamb_net_encoder(w_x), self.wind_vel_encoder(w_x)], dim=2)
@@ -388,12 +388,12 @@ class PredNet(nn.Module):
         out = self.fc1(pred_input)
         out = self.dropout(out)
         out = self.relu(out)
-        out = self.dropout(out)
-        out = self.fc2(out)
-        out = self.relu(out)
-        out = self.dropout(out)
-        out = self.fc3(out)
-        out = self.relu(out)
+        #out = self.dropout(out)
+        #out = self.fc2(out)
+        # out = self.relu(out)
+        # out = self.dropout(out)
+        # out = self.fc3(out)
+        # out = self.relu(out)
         return out
 
 class SimplePredNet(nn.Module):

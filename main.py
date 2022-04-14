@@ -37,13 +37,18 @@ memory = 24
 horizon = 5
 batch = 1440 * 2
 
-df.insert(0, 'GHI', df.pop('GHI'))
 weather_df = df[['Month_sin',
                  'Month_cos', 'Hour_sin',
                  'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos', 'Tamb', 'Cloudopacity', 'DewPoint', 'DHI',
                  'DNI',
                  'EBH', 'Pw', 'Pressure', 'WindVel', 'AlbedoDaily', 'WindDir_sin',
                  'WindDir_cos', 'Zenith_sin', 'Zenith_cos', 'Azimuth_sin', 'Azimuth_cos']]
+weather_columns = weather_df.columns.to_list()
+df_columns = df.columns.to_list()
+df_order = pd.unique(weather_columns + df_columns)
+
+df = df[df_order]
+df.insert(0, 'GHI', df.pop('GHI'))
 
 # %% TRAIN, VALIDATION, TEST SPLIT
 enc_df = df[['GHI', 'Month_sin',
@@ -77,8 +82,8 @@ decoder_params = {
 
 weather_encoder_params = {
     'input_size': weather_features,
-    'hs_1': weather_features*3,
-    'hs_2': weather_features*4,
+    'hs_1': weather_features * 3,
+    'hs_2': weather_features * 4,
     'output_size': horizon,
     'dropout': dropout,
 }
@@ -94,57 +99,57 @@ data_params = DataParameters(memory=memory, horizon=horizon, batch_size=batch, t
 
 # %% LOAD DATA
 if train_weather:
-        # weather_data_param = DataParameters(memory=memory,
-        #                                     horizon=horizon,
-        #                                     batch_size=batch,
-        #                                     target=weather_target)
-        #
-        # weather_model = WeatherEncoderDecoder(encoder_params=weather_encoder_params,
-        #                                       decoder_params=weather_decoder_params,
-        #                                       memory=memory,
-        #                                       output_size=horizon)
-        # weather_optimizer = torch.optim.Adam(params=weather_model.parameters(), lr=learning_rate)
-        #
-        # weather_training_param = TrainingParameters(epochs=50,
-        #                                             loss_function=F.mse_loss,
-        #                                             optimiser=weather_optimizer)
-        # weather_pipeline = Pipeline(data=weather_df,
-        #                             model=weather_model,
-        #                             data_params=weather_data_param,
-        #                             training_params=weather_training_param,
-        #                             target=weather_target)
-        # trained_model = weather_pipeline.train(plot=True)
+    # weather_data_param = DataParameters(memory=memory,
+    #                                     horizon=horizon,
+    #                                     batch_size=batch,
+    #                                     target=weather_target)
+    #
+    # weather_model = WeatherEncoderDecoder(encoder_params=weather_encoder_params,
+    #                                       decoder_params=weather_decoder_params,
+    #                                       memory=memory,
+    #                                       output_size=horizon)
+    # weather_optimizer = torch.optim.Adam(params=weather_model.parameters(), lr=learning_rate)
+    #
+    # weather_training_param = TrainingParameters(epochs=50,
+    #                                             loss_function=F.mse_loss,
+    #                                             optimiser=weather_optimizer)
+    # weather_pipeline = Pipeline(data=weather_df,
+    #                             model=weather_model,
+    #                             data_params=weather_data_param,
+    #                             training_params=weather_training_param,
+    #                             target=weather_target)
+    # trained_model = weather_pipeline.train(plot=True)
 
-        weather_data_params = [DataParameters(memory=memory,
-                                              horizon=horizon,
-                                              batch_size=batch,
-                                              target=weather_targets[i]
-                                              )
-                               for i in range(len(weather_targets))
-                               ]
-        weather_model = WeatherEncoderDecoder(encoder_params=weather_encoder_params,
-                                              decoder_params=weather_decoder_params,
-                                              memory=memory,
-                                              output_size=horizon
-                                              )
+    weather_data_params = [DataParameters(memory=memory,
+                                          horizon=horizon,
+                                          batch_size=batch,
+                                          target=weather_targets[i]
+                                          )
+                           for i in range(len(weather_targets))
+                           ]
+    weather_model = WeatherEncoderDecoder(encoder_params=weather_encoder_params,
+                                          decoder_params=weather_decoder_params,
+                                          memory=memory,
+                                          output_size=horizon
+                                          )
 
-        weather_optimizers = [torch.optim.Adam(params=weather_model.parameters(), lr=learning_rate)
-                              for i in range(len(weather_targets))]
+    weather_optimizers = [torch.optim.Adam(params=weather_model.parameters(), lr=learning_rate)
+                          for i in range(len(weather_targets))]
 
-        weather_training_params = [TrainingParameters(epochs=75,
-                                                      loss_function=F.l1_loss,
-                                                      optimiser=weather_optimizers[i]
-                                                      ) for i in range(len(weather_optimizers))]
-        weather_pipelines = [Pipeline(data=weather_df,
-                                      model=weather_model,
-                                      data_params=weather_data_params[i],
-                                      training_params=weather_training_params[i],
-                                      target=weather_data_params[i].target
-                                      )
-                             for i in range(len(weather_data_params))
-                             ]
-        [i.train(plot=True) for i in weather_pipelines]
-        [i.save(f"weather_model_{i.target}") for i in weather_pipelines]
+    weather_training_params = [TrainingParameters(epochs=75,
+                                                  loss_function=F.l1_loss,
+                                                  optimiser=weather_optimizers[i]
+                                                  ) for i in range(len(weather_optimizers))]
+    weather_pipelines = [Pipeline(data=weather_df,
+                                  model=weather_model,
+                                  data_params=weather_data_params[i],
+                                  training_params=weather_training_params[i],
+                                  target=weather_data_params[i].target
+                                  )
+                         for i in range(len(weather_data_params))
+                         ]
+    [i.train(plot=True) for i in weather_pipelines]
+    [i.save(f"weather_model_{i.target}") for i in weather_pipelines]
 
 if train_encoder:
     # %% BUILD FEATURES
@@ -154,10 +159,10 @@ if train_encoder:
     # %% MODEL INSTANTIATION
 
     model = WeatherEncoderDecoder(encoder_params=encoder_params,
-                                decoder_params=decoder_params,
-                                memory=memory,
-                                output_size=horizon
-                                )
+                                  decoder_params=decoder_params,
+                                  memory=memory,
+                                  output_size=horizon
+                                  )
 
     model_optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
     model_scheduler2 = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(model_optimizer, T_0=10, T_mult=2)
@@ -200,8 +205,6 @@ if train_pred:
                        weather_pred=weather_pred)
 
     optimizer_pred = torch.optim.Adam(params=pred_net.parameters(), lr=learning_rate)
-    # scheduler1 = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.9)
-    # scheduler2 = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20, 40], gamma=0.9)
     training_params = TrainingParameters(epochs=50,
                                          loss_function=F.l1_loss,
                                          optimiser=optimizer_pred)
@@ -211,16 +214,17 @@ if train_pred:
     mdl, losses = pred_pipeline.train(plot=True)
 
 if train_simple_pred:
+    input_size = 888
     simple_pred_params = {
-        'input_size': 888,
-        'hs_1': 444,
-        'hs_2': 222,
+        'input_size': input_size,
+        'hs_1': input_size,
+        'hs_2': input_size * 4,
         'output': horizon
     }
     simple_pred_net = SimplePredNet(dropout=dropout, params=simple_pred_params)
     optimizer_simple_pred_net = torch.optim.Adam(params=simple_pred_net.parameters(), lr=learning_rate)
     training_params = TrainingParameters(epochs=50,
-                                         loss_function=F.mse_loss,
+                                         loss_function=F.l1_loss,
                                          optimiser=optimizer_simple_pred_net)
     simple_pred_net_pipeline = Pipeline(data=df, model=simple_pred_net, data_params=data_params,
                                         training_params=training_params, target="GHI")

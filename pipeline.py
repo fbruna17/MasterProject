@@ -110,7 +110,7 @@ class Pipeline:
                 f"Progress: {0 if len(losses['train'])<2 else - round(losses['train'][-2] - losses['train'][-1], 4)}")
 
             if plot:
-                if epoch % 25 == 0:
+                if epoch % 5 == 0:
                     plt.plot(y[::self.data_params.horizon].flatten()[:100])
                     plt.plot(out[::self.data_params.horizon].flatten()[:100].detach())
                     plt.show()

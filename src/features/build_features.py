@@ -5,7 +5,7 @@ from numpy import sin, cos, pi
 def generate_leads(df, columns, number_of_leads: int = 5):
     for col in columns:
         for i in range(1, number_of_leads):
-            df[f"{col} t+{i}"] = df[col].shift(-i)
+            df[f"{col}t{i}"] = df[col].shift(-i)
     return df
 
 
