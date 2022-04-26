@@ -45,14 +45,14 @@ class WhateverNet2(nn.Module):
             name: self.hidden_size for name in self.encoder_variables
         }
 
+        input_size = {"0": 72}
         # -------------- START COVARIATE ENCODER --------------
-        self.covariate_gate = VariableSelectionNetwork(input_sizes=encoder_input_sizes,
+        self.covariate_gate = VariableSelectionNetwork(input_sizes=input_size,
                                                        hidden_size=self.hidden_size,
                                                        input_embedding_flags={},
                                                        dropout=self.dropout,
                                                        context_size=self.hidden_size,
-                                                       prescalers=self.prescalers_linear,
-                                                       single_variable_grns={})
+                                                       prescalers=self.prescalers_linear)
 
         self.bidirection_GRU = BiGRU(input_size=hidden_size,
                                      hidden_size=hidden_size,

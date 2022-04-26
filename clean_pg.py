@@ -14,12 +14,12 @@ warnings.simplefilter(action="ignore")
 
 # %% Preparing data and building features.
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
-df = pd.read_pickle(path)[:4000]
+df = pd.read_pickle(path)[:10000]
 df = df.drop(columns="Minute")
 df = bf.build_features(df)
-memory = 24
+memory = 24 * 3
 horizon = 4
-batch = 128
+batch = 64
 
 weather_df = df[['Month_sin', 'Month_cos',
                  'Hour_sin', 'Hour_cos',
@@ -42,9 +42,8 @@ df.to_csv("irradiance_dataset")
 n_features = len(df.columns)
 target = 'GHI'
 learning_rate = 0.0005
-dropout = 0.4
+dropout = 0.1
 weather_features = len(weather_df.columns)
-
 
 data_params = DataParameters(memory=memory, horizon=horizon, batch_size=batch, target=target)
 
@@ -56,17 +55,17 @@ model2 = WhateverNet2(input_size=n_features,
                       memory=memory,
                       target_size=1,
                       horizon=horizon,
-                      hidden_size=56,
+                      hidden_size=72,
                       bigru_layers=1,
                       attention_head_size=4,
                       tcn_params=tcn_params,
                       nr_parameters=1
                       )
 
-model_optimizer = torch.optim.Adam(params=model2.parameters(), lr=learning_rate, weight_decay=0.001)
-lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=model_optimizer, gamma=0.93)
+model_optimizer = torch.optim.Adam(params=model2.parameters())
+# lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=model_optimizer, gamma=0.93)
 
-training_params = TrainingParameters(epochs=25, loss_function=nn.MSELoss(), optimiser=model_optimizer)
+training_params = TrainingParameters(epochs=25, loss_function=nn.L1Loss(), optimiser=model_optimizer)
 
 pipe = Pipeline(data=df, model=model2, data_params=data_params, training_params=training_params, target="GHI")
 
