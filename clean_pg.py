@@ -61,13 +61,13 @@ model2 = WhateverNet2(input_size=n_features,
                       bigru_layers=1,
                       attention_head_size=4,
                       tcn_params=tcn_params,
-                      nr_parameters=7
+                      nr_parameters=1
                       )
 
 model_optimizer = torch.optim.Adam(params=model2.parameters(), lr=learning_rate, weight_decay=0.001)
 lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=model_optimizer, gamma=0.93)
 
-training_params = TrainingParameters(epochs=25, loss_function=QuantileLoss(), optimiser=model_optimizer)
+training_params = TrainingParameters(epochs=25, loss_function=nn.MSELoss(), optimiser=model_optimizer)
 
 pipe = Pipeline(data=df, model=model2, data_params=data_params, training_params=training_params, target="GHI")
 

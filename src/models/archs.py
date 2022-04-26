@@ -117,7 +117,7 @@ class WhateverNet2(nn.Module):
 
         self.pre_output_network_addnorm = AddNorm(input_size=hidden_size, trainable_add=False)
 
-        self.output_network = nn.Linear(hidden_size, target_size)
+        self.output_network = nn.Linear(memory*hidden_size, horizon)
 
         # -------------- END OUTPUT NETWORK --------------
 
