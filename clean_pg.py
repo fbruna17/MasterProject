@@ -3,12 +3,11 @@ import pandas as pd
 import torch.utils.data
 import pytorch_lightning as pl
 from pytorch_forecasting import QuantileLoss
-
+import torch.nn as nn
 from pipeline import TrainingParameters, DataParameters, Pipeline
 from src.Datahandler.SequenceDataset import make_torch_dataset
 from src.features import build_features as bf
 from src.helpers import plot_losses
-from src.models.architecture import *
 from src.models.archs import WhateverNet2, WhateverNet3
 
 warnings.simplefilter(action="ignore")

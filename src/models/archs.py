@@ -12,7 +12,6 @@ from src.models.layers import (TCNModule,
                                BiGRU, AddNorm,
                                GateAddNorm, GatedLinearUnit,
                                InterpretableMultiHeadAttention, VariableSelectionNetwork, GatedResidualNetwork)
-from src.models.architecture import VariationalLSTM
 
 class WhateverNet2(nn.Module):
     def __init__(self,
