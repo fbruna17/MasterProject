@@ -35,16 +35,16 @@ class TimeDistributed(nn.Module):
 
 class ResidualBlock(nn.Module):
     def __init__(
-        self,
-        num_filters: int,
-        kernel_size: int,
-        dilation_base: int,
-        dropout_fn,
-        weight_norm: bool,
-        nr_blocks_below: int,
-        num_layers: int,
-        input_size: int,
-        target_size: int,
+            self,
+            num_filters: int,
+            kernel_size: int,
+            dilation_base: int,
+            dropout_fn,
+            weight_norm: bool,
+            nr_blocks_below: int,
+            num_layers: int,
+            input_size: int,
+            target_size: int,
     ):
         super(ResidualBlock, self).__init__()
 
@@ -81,7 +81,7 @@ class ResidualBlock(nn.Module):
 
         # first step
         left_padding = (self.dilation_base ** self.nr_blocks_below) * (
-            self.kernel_size - 1
+                self.kernel_size - 1
         )
         x = F.pad(x, (left_padding, 0))
         x = self.dropout_fn(F.relu(self.conv1(x)))
@@ -103,17 +103,17 @@ class ResidualBlock(nn.Module):
 
 class TCNModule(nn.Module):
     def __init__(
-        self,
-        input_size: int,
-        input_chunk_length: int,
-        kernel_size: int,
-        num_filters: int,
-        num_layers: Optional[int],
-        dropout: float,
-        target_size: int = 1,
-        nr_params: int = 1,
-        dilation_base: int = 2,
-        weight_norm: bool = False,
+            self,
+            input_size: int,
+            input_chunk_length: int,
+            kernel_size: int,
+            num_filters: int,
+            num_layers: Optional[int],
+            dropout: float,
+            target_size: int = 1,
+            nr_params: int = 1,
+            dilation_base: int = 2,
+            weight_norm: bool = False,
     ):
         super(TCNModule, self).__init__()
 
@@ -172,7 +172,6 @@ class TCNModule(nn.Module):
 
         x = x.transpose(1, 2)
 
-
         return x
 
 
@@ -196,12 +195,12 @@ class BiGRU(nn.Module):
 
 class GateAddNorm(nn.Module):
     def __init__(
-        self,
-        input_size: int,
-        hidden_size: int = None,
-        skip_size: int = None,
-        trainable_add: bool = False,
-        dropout: float = None
+            self,
+            input_size: int,
+            hidden_size: int = None,
+            skip_size: int = None,
+            trainable_add: bool = False,
+            dropout: float = None
     ):
         super().__init__()
 
@@ -252,7 +251,7 @@ class AddNorm(nn.Module):
 
 class TimeDistributedInterpolation(nn.Module):
     def __init__(
-        self, output_size: int, batch_first: bool = False, trainable: bool = False
+            self, output_size: int, batch_first: bool = False, trainable: bool = False
     ):
         super().__init__()
         self.output_size = output_size
@@ -369,7 +368,8 @@ class InterpretableMultiHeadAttention(nn.Module):
 class GatedLinearUnit(nn.Module):
     """Gated Linear Unit"""
 
-    def __init__(self, input_size: int, hidden_size: int = None, dropout: float = None, bidirectional_input: bool = False):
+    def __init__(self, input_size: int, hidden_size: int = None, dropout: float = None,
+                 bidirectional_input: bool = False):
         super().__init__()
 
         if dropout is not None:
@@ -398,7 +398,7 @@ class GatedLinearUnit(nn.Module):
 
 class ResampleNorm(nn.Module):
     def __init__(
-        self, input_size: int, output_size: int = None, trainable_add: bool = True
+            self, input_size: int, output_size: int = None, trainable_add: bool = True
     ):
         super().__init__()
 
@@ -429,13 +429,13 @@ class ResampleNorm(nn.Module):
 
 class GatedResidualNetwork(nn.Module):
     def __init__(
-        self,
-        input_size: int,
-        hidden_size: int,
-        output_size: int,
-        dropout: float = 0.1,
-        context_size: int = None,
-        residual: bool = False,
+            self,
+            input_size: int,
+            hidden_size: int,
+            output_size: int,
+            dropout: float = 0.1,
+            context_size: int = None,
+            residual: bool = False,
     ):
         super().__init__()
         self.input_size = input_size
@@ -500,14 +500,10 @@ class GatedResidualNetwork(nn.Module):
 
 class VariableSelectionNetwork(nn.Module):
     def __init__(
-        self,
-        input_sizes: Dict[str, int],
-        hidden_size: int,
-        input_embedding_flags: Dict[str, bool] = {},
-        dropout: float = 0.1,
-        context_size: int = None,
-        single_variable_grns: Dict[str, GatedResidualNetwork] = {},
-        prescalers: Dict[str, nn.Linear] = {},
+            self,
+            input_size: int,
+            hidden_size: int,
+            dropout: float = 0.1,
     ):
         """
         Calcualte weights for ``num_inputs`` variables  which are each of size ``input_size``
@@ -515,50 +511,25 @@ class VariableSelectionNetwork(nn.Module):
         super().__init__()
 
         self.hidden_size = hidden_size
-        self.input_sizes = input_sizes
-        self.input_embedding_flags = input_embedding_flags
+        self.input_size = input_size
         self.dropout = dropout
-        self.context_size = context_size
 
-        if self.num_inputs > 1:
-            if self.context_size is not None:
-                self.flattened_grn = GatedResidualNetwork(
-                    self.input_size_total,
-                    min(self.hidden_size, self.num_inputs),
-                    self.num_inputs,
-                    self.dropout,
-                    self.context_size,
-                    residual=False,
-                )
-            else:
-                self.flattened_grn = GatedResidualNetwork(
-                    self.input_size_total,
-                    min(self.hidden_size, self.num_inputs),
-                    self.num_inputs,
-                    self.dropout,
-                    residual=False,
-                )
+        self.flattened_grn = GatedResidualNetwork(
+            self.input_size,
+            1,
+            1,
+            self.dropout,
+            residual=False,
+        )
 
-        self.single_variable_grns = nn.ModuleDict()
-        self.prescalers = nn.ModuleDict()
-        for name, input_size in self.input_sizes.items():
-            if name in single_variable_grns:
-                self.single_variable_grns[name] = single_variable_grns[name]
-            elif self.input_embedding_flags.get(name, False):
-                self.single_variable_grns[name] = ResampleNorm(
-                    input_size, self.hidden_size
-                )
-            else:
-                self.single_variable_grns[name] = GatedResidualNetwork(
-                    input_size,
-                    min(input_size, self.hidden_size),
-                    output_size=self.hidden_size,
-                    dropout=self.dropout,
-                )
-            if name in prescalers:  # reals need to be first scaled up
-                self.prescalers[name] = prescalers[name]
-            elif not self.input_embedding_flags.get(name, False):
-                self.prescalers[name] = nn.Linear(1, input_size)
+        self.single_variable_grns = GatedResidualNetwork(
+            self.hidden_size,
+            self.hidden_size,
+            output_size=self.hidden_size,
+            dropout=self.dropout,
+        )
+
+        self.prescaler = nn.Linear(1, hidden_size)
 
         self.softmax = nn.Softmax(dim=-1)
 
@@ -574,42 +545,19 @@ class VariableSelectionNetwork(nn.Module):
         return len(self.input_sizes)
 
     def forward(self, x: Dict[str, torch.Tensor], context: torch.Tensor = None):
-        if self.num_inputs > 1:
-            # transform single variables
-            var_outputs = []
-            weight_inputs = []
-            for name in self.input_sizes.keys():
-                # select embedding belonging to a single input
-                variable_embedding = x[name]
-                if name in self.prescalers:
-                    variable_embedding = self.prescalers[name](variable_embedding)
-                weight_inputs.append(variable_embedding)
-                var_outputs.append(self.single_variable_grns[name](variable_embedding))
-            var_outputs = torch.stack(var_outputs, dim=-1)
-
-            # calculate variable weights
-            flat_embedding = torch.cat(weight_inputs, dim=-1)
-            sparse_weights = self.flattened_grn(flat_embedding, context)
-            sparse_weights = self.softmax(sparse_weights).unsqueeze(-2)
-
-            outputs = var_outputs * sparse_weights
-            outputs = outputs.sum(dim=-1)
-        else:  # for one input, do not perform variable selection but just encoding
-            name = next(iter(self.single_variable_grns.keys()))
-            variable_embedding = x[name]
-            if name in self.prescalers:
-                variable_embedding = self.prescalers[name](variable_embedding)
-            outputs = self.single_variable_grns[name](
-                variable_embedding
-            )  # fast forward if only one variable
-            if outputs.ndim == 3:  # -> batch size, time, hidden size, n_variables
-                sparse_weights = torch.ones(
-                    outputs.size(0), outputs.size(1), 1, 1, device=outputs.device
-                )  #
-            else:  # ndim == 2 -> batch size, hidden size, n_variables
-                sparse_weights = torch.ones(
-                    outputs.size(0), 1, 1, device=outputs.device
-                )
+        variable_embedding = x
+        variable_embedding = self.prescaler(variable_embedding)
+        outputs = self.single_variable_grns(
+            variable_embedding
+        )  # fast forward if only one variable
+        if outputs.ndim == 3:  # -> batch size, time, hidden size, n_variables
+            sparse_weights = torch.ones(
+                outputs.size(0), outputs.size(1), 1, 1, device=outputs.device
+            )  #
+        else:  # ndim == 2 -> batch size, hidden size, n_variables
+            sparse_weights = torch.ones(
+                outputs.size(0), 1, 1, device=outputs.device
+            )
         return outputs, sparse_weights
 
 

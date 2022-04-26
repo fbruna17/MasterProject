@@ -37,22 +37,16 @@ class WhateverNet2(nn.Module):
 
         # ------------- HELPER VARS ------
 
-        self.prescalers_linear = {
-            name: nn.Linear(1, self.hidden_size) for name in self.reals
-        }
+        self.prescalers_linear = nn.Linear(1, self.hidden_size)
+
 
         encoder_input_sizes = {
             name: self.hidden_size for name in self.encoder_variables
         }
-
-        input_size = {"0": 72}
         # -------------- START COVARIATE ENCODER --------------
-        self.covariate_gate = VariableSelectionNetwork(input_sizes=input_size,
+        self.covariate_gate = VariableSelectionNetwork(input_size=self.input_size,
                                                        hidden_size=self.hidden_size,
-                                                       input_embedding_flags={},
-                                                       dropout=self.dropout,
-                                                       context_size=self.hidden_size,
-                                                       prescalers=self.prescalers_linear)
+                                                       dropout=self.dropout)
 
         self.bidirection_GRU = BiGRU(input_size=hidden_size,
                                      hidden_size=hidden_size,
@@ -125,7 +119,7 @@ class WhateverNet2(nn.Module):
         """
         List of all encoder variables in model (excluding static variables)
         """
-        return [f"{i}" for i in range(self.input_size)]
+        return ["1"]
 
     @property
     def reals(self) -> List[str]:
@@ -136,9 +130,8 @@ class WhateverNet2(nn.Module):
 
     def forward(self, x):
         # Input: (Batch, Memory, Features)
-        input_vectors = {name: x[..., idx].unsqueeze(-1) for idx, name in enumerate(self.encoder_variables)}
-        embeddings_varying_encoder = {name: input_vectors[name][:, :self.memory] for name in self.encoder_variables}
-        covariate_gate_out, _ = self.covariate_gate(x=embeddings_varying_encoder)
+        x = x[...,0].unsqueeze(-1)
+        covariate_gate_out, _ = self.covariate_gate(x=x)
         # Output: (Batch, Memory, Hidden Size)
 
         bigru_out = self.bidirection_GRU(covariate_gate_out)
