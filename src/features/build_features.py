@@ -1,4 +1,3 @@
-from pandas import DataFrame
 from numpy import sin, cos, pi
 
 
@@ -18,10 +17,10 @@ def encode_cycle(df, columns):
 
 def build_features(df):
     cyclic_features = ['Month','Hour', 'Year', 'Day', 'WindDir', 'Zenith', 'Azimuth']
-    number_of_leads = 4
-    lead_feature = ['Azimuth_sin', 'Azimuth_cos', 'Zenith_sin', 'Zenith_cos']
+    #number_of_leads = 4
+    #lead_feature = ['Azimuth_sin', 'Azimuth_cos', 'Zenith_sin', 'Zenith_cos']
     df = encode_cycle(df, cyclic_features)
 
-    df = generate_leads(df, lead_feature, number_of_leads=number_of_leads)
+    #df = generate_leads(df, lead_feature, number_of_leads=number_of_leads)
     df = df.drop(columns=cyclic_features)
     return df

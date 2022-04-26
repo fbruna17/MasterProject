@@ -10,7 +10,7 @@ from src.models.architecture import *
 
 warnings.simplefilter(action="ignore")
 
-train_weather = False
+train_weather = True
 train_encoder = False
 train_pred = True
 train_simple_pred = False
@@ -19,30 +19,22 @@ path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
 df = pd.read_pickle(path)[:30000]
 df = df.drop(columns="Minute")
 df = bf.build_features(df)
-# column_order = ['GHI', 'Month_sin',
-#                 'Month_cos', 'Hour_sin',
-#                 'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos', 'Tamb', 'Cloudopacity', 'DewPoint', 'DHI',
-#                 'DNI',
-#                 'EBH', 'Pw', 'Pressure', 'WindVel', 'AlbedoDaily', 'WindDir_sin',
-#                 'WindDir_cos',
-#                 'Zenith_sin', 'Zenith_cos', 'Azimuth_sin', 'Azimuth_cos',
-#                 'Azimuth_sin t+1', 'Azimuth_sin t+2', 'Azimuth_sin t+3',
-#                 'Azimuth_cos t+1', 'Azimuth_cos t+2', 'Azimuth_cos t+3',
-#                 'Zenith_sin t+1', 'Zenith_sin t+2', 'Zenith_sin t+3',
-#                 'Zenith_cos t+1', 'Zenith_cos t+2', 'Zenith_cos t+3'
-#                 ]
-#
-# df = df[column_order]
 memory = 24
 horizon = 5
-batch = 1440 * 2
+batch = 128
 
-weather_df = df[['Month_sin',
-                 'Month_cos', 'Hour_sin',
-                 'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos', 'Tamb', 'Cloudopacity', 'DewPoint', 'DHI',
-                 'DNI',
-                 'EBH', 'Pw', 'Pressure', 'WindVel', 'AlbedoDaily', 'WindDir_sin',
-                 'WindDir_cos', 'Zenith_sin', 'Zenith_cos', 'Azimuth_sin', 'Azimuth_cos']]
+weather_df = df[['Month_sin', 'Month_cos',
+                 'Hour_sin', 'Hour_cos',
+                 'Year_sin', 'Year_cos',
+                 'Day_sin', 'Day_cos',
+                 'Tamb', 'Cloudopacity',
+                 'DewPoint', 'DHI',
+                 'DNI', 'EBH',
+                 'Pw', 'Pressure',
+                 'WindVel', 'AlbedoDaily',
+                 'WindDir_sin', 'WindDir_cos',
+                 'Zenith_sin', 'Zenith_cos',
+                 'Azimuth_sin', 'Azimuth_cos']]
 weather_columns = weather_df.columns.to_list()
 df_columns = df.columns.to_list()
 df_order = pd.unique(weather_columns + df_columns)
@@ -53,7 +45,8 @@ df.insert(0, 'GHI', df.pop('GHI'))
 # %% TRAIN, VALIDATION, TEST SPLIT
 enc_df = df[['GHI', 'Month_sin',
              'Month_cos', 'Hour_sin',
-             'Hour_cos', 'Year_sin', 'Year_cos', 'Day_sin', 'Day_cos']]
+             'Hour_cos', 'Year_sin',
+             'Year_cos', 'Day_sin', 'Day_cos']]
 
 # %% MODEL AND TRAINING PARAMETERS
 n_features = len(df.columns)
@@ -61,7 +54,7 @@ target = 'GHI'
 weather_targets = ['Tamb', "Cloudopacity", "DewPoint", "Pw", "Pressure", "WindVel"]
 weather_target = 'Tamb'
 learning_rate = 0.001
-dropout = 0.1
+dropout = 0.4
 enc_features = len(enc_df.columns)
 weather_features = len(weather_df.columns)
 
@@ -99,60 +92,58 @@ data_params = DataParameters(memory=memory, horizon=horizon, batch_size=batch, t
 
 # %% LOAD DATA
 if train_weather:
-    # weather_data_param = DataParameters(memory=memory,
-    #                                     horizon=horizon,
-    #                                     batch_size=batch,
-    #                                     target=weather_target)
-    #
-    # weather_model = WeatherEncoderDecoder(encoder_params=weather_encoder_params,
-    #                                       decoder_params=weather_decoder_params,
-    #                                       memory=memory,
-    #                                       output_size=horizon)
-    # weather_optimizer = torch.optim.Adam(params=weather_model.parameters(), lr=learning_rate)
-    #
-    # weather_training_param = TrainingParameters(epochs=50,
-    #                                             loss_function=F.mse_loss,
-    #                                             optimiser=weather_optimizer)
-    # weather_pipeline = Pipeline(data=weather_df,
-    #                             model=weather_model,
-    #                             data_params=weather_data_param,
-    #                             training_params=weather_training_param,
-    #                             target=weather_target)
-    # trained_model = weather_pipeline.train(plot=True)
-
+    # A list containing all the data parameters for the weather predictors.
     weather_data_params = [DataParameters(memory=memory,
                                           horizon=horizon,
                                           batch_size=batch,
-                                          target=weather_targets[i]
-                                          )
-                           for i in range(len(weather_targets))
-                           ]
-    weather_model = WeatherEncoderDecoder(encoder_params=weather_encoder_params,
-                                          decoder_params=weather_decoder_params,
-                                          memory=memory,
-                                          output_size=horizon
-                                          )
+                                          target=weather_targets[i])
+                           for i in range(len(weather_targets))]
 
-    weather_optimizers = [torch.optim.Adam(params=weather_model.parameters(), lr=learning_rate)
+    # A list of weather models, one for each weather feature.
+    weather_models = [WeatherEncoderDecoder(encoder_params=weather_encoder_params,
+                                            decoder_params=weather_decoder_params,
+                                            memory=memory,
+                                            output_size=horizon)
+                      for _ in range(len(weather_targets))]
+
+    # A list of optimizers for the weather models.
+    weather_optimizers = [torch.optim.Adam(params=weather_models[i].parameters(), lr=learning_rate)
                           for i in range(len(weather_targets))]
 
+    # A list of training params for the weather models
     weather_training_params = [TrainingParameters(epochs=75,
                                                   loss_function=F.l1_loss,
-                                                  optimiser=weather_optimizers[i]
-                                                  ) for i in range(len(weather_optimizers))]
+                                                  optimiser=weather_optimizers[i])
+                               for i in range(len(weather_optimizers))]
+
+    # A list of pipelines for all the models.
     weather_pipelines = [Pipeline(data=weather_df,
-                                  model=weather_model,
+                                  model=weather_models[i],
                                   data_params=weather_data_params[i],
                                   training_params=weather_training_params[i],
-                                  target=weather_data_params[i].target
-                                  )
-                         for i in range(len(weather_data_params))
-                         ]
+                                  target=weather_data_params[i].target)
+                         for i in range(len(weather_data_params))]
+    # Train the models
     [i.train(plot=True) for i in weather_pipelines]
+    # Save the models
     [i.save(f"weather_model_{i.target}") for i in weather_pipelines]
+
+
+prefix = 'weather_model_'
+weather_nets = [torch.load(prefix + 'Tamb'),
+                torch.load(prefix + 'Cloudopacity'),
+                torch.load(prefix + 'DewPoint'),
+                torch.load(prefix + 'Pw'),
+                torch.load(prefix + 'Pressure'),
+                torch.load(prefix + 'WindVel')]
+
+weather_pred = WeatherPredictor(*weather_nets)
+
 
 if train_encoder:
     # %% BUILD FEATURES
+
+
 
     # %% SCALING and TORCH DATALOADER
 

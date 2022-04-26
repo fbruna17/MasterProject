@@ -64,23 +64,14 @@ class Pipeline:
 
         epochs = tqdm(range(1, self.training_params.epochs + 1))
         model.train()
-        skip = False
         for epoch in epochs:
-            if epoch % 5 == 0:
-                skip = True
             epoch_loss = []
             for i, (x, y) in enumerate(self.train_data):
-                if skip:
-                    out = model(x)
-                    loss = torch.sqrt((loss_fn(out, y)))
-                    epoch_loss.append(loss.item())
-                    skip = False
-                    break
                 x, y = x.to(device), y.to(device)
                 out = model(x)
 
+                loss = loss_fn(out, y)
                 optimiser.zero_grad()
-                loss = torch.sqrt(loss_fn(out, y))
                 loss.backward()
                 optimiser.step()
 
@@ -110,9 +101,14 @@ class Pipeline:
                 f"Progress: {0 if len(losses['train'])<2 else - round(losses['train'][-2] - losses['train'][-1], 4)}")
 
             if plot:
-                if epoch % 5 == 0:
-                    plt.plot(y[::self.data_params.horizon].flatten()[:100])
-                    plt.plot(out[::self.data_params.horizon].flatten()[:100].detach())
+                if epoch % 2 == 0:
+                    plt.plot(y[::self.data_params.horizon].flatten()[:100], label="Ground Truth")
+                    plt.plot(out[::self.data_params.horizon].flatten()[:100].detach(), label="Predictions")
+                    plt.legend()
+                    plt.xlabel("Timesteps")
+                    plt.ylabel("Global Horizontal Irradiance")
+                    plt.title("Solar Energy Forecast")
+                    plt.suptitle(f"Model output after {epoch} epochs")
                     plt.show()
         self.model = model
         return model, losses
@@ -123,3 +119,5 @@ class Pipeline:
 
 def inverse_transform_column_range(array, col_start, col_end, min_val, max_val):
     return (array[:, col_start: col_end]*(max_val - min_val)) + min_val
+
+

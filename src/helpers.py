@@ -58,3 +58,5 @@ def plot_predictions(test_results, number_of_timesteps_to_plot, horizon):
     plt.ylabel('GHI')
     plt.legend()
     plt.show()
+
+
