@@ -169,9 +169,7 @@ class TCNModule(nn.Module):
 
         for res_block in self.res_blocks_list:
             x = res_block(x)
-
         x = x.transpose(1, 2)
-
 
         return x
 
@@ -614,4 +612,16 @@ class VariableSelectionNetwork(nn.Module):
 
 
 class OutputNetwork(nn.Module):
-    ...
+    def __init__(self, d_model, nr_parameters, hidden_size, horizon):
+        super(OutputNetwork, self).__init__()
+        self.attention = InterpretableMultiHeadAttention(n_head=2, d_model=d_model)
+        self.fc = nn.Linear(hidden_size, nr_parameters)
+        self.horizon = horizon
+
+    def forward(self, x):
+        out, _ = self.attention(q=x[:, -self.horizon:, :],
+                               k=x,
+                               v=x)
+        out = self.fc(out)
+        return out
+

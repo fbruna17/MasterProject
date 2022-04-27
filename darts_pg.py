@@ -1,22 +1,15 @@
 # %%
 
-
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from darts.utils.likelihood_models import QuantileRegression
 
 from src.features import build_features as bf
 from darts import TimeSeries
-from darts.models import TCNModel, RNNModel, TFTModel
+from src.models.darts_implementation import SolarFlare
 from darts.dataprocessing.transformers import Scaler
-from darts.utils.timeseries_generation import datetime_attribute_timeseries
-from darts.metrics import mape, r2_score
-from darts.utils.missing_values import fill_missing_values
-from darts.datasets import AirPassengersDataset, SunspotsDataset, EnergyDataset
 # %%
 path = 'data/raw/irradiance_data_NL_2007_2022.pkl'
-df = pd.read_pickle(path)[:30000]
+df = pd.read_pickle(path)[:4000]
 df = df.drop(columns="Minute")
 df = bf.build_features(df)
 memory = 24
@@ -51,12 +44,14 @@ covar_test = covar_ts_scaler.transform(past_covar_test)
 
 # %%
 
-model_air = TCNModel(input_chunk_length=memory,
-                     kernel_size=2,
-                     dilation_base=2,
-                     output_chunk_length=horizon,
-                     likelihood=QuantileRegression(quantiles=[0.01, 0.05, 0.2, 0.5, 0.8, 0.95, 0.99]),
-                     batch_size=batch)
+model_air = SolarFlare(input_chunk_length=memory,
+                       kernel_size=2,
+                       dilation_base=2,
+                       output_chunk_length=horizon,
+                       likelihood=QuantileRegression(quantiles=[0.01, 0.05, 0.2, 0.5, 0.8, 0.95, 0.99]),
+                       batch_size=batch,
+                       hidden_size=56)
+
 
 # %%
 
