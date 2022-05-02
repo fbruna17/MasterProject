@@ -2,8 +2,11 @@
 # %%
 from typing import Tuple, Sequence, Optional, Union
 
+import matplotlib.pyplot as plt
+import pandas as pd
 import torch
 from darts import TimeSeries
+from darts.dataprocessing.transformers import Scaler
 from darts.logging import raise_if_not, get_logger
 from darts.models.forecasting.torch_forecasting_model import PastCovariatesTorchModel, \
     TorchParametricProbabilisticForecastingModel, TorchForecastingModel
@@ -766,6 +769,59 @@ class SolarFlare(TorchParametricProbabilisticForecastingModel, PastCovariatesTor
             model = torch.load(fin, map_location=torch.device('cpu'))
         return model
 
+# %%
+
+path = 'irradiance_dataset2.csv'
+df = pd.read_csv(path)[:10000]
+df = df.drop(columns="Unnamed: 0")
+memory = 24
+horizon = 5
+batch = 128
+
+df.insert(0, 'GHI', df.pop('GHI'))
+
+# Split data
+target_ts = TimeSeries.from_series(df["GHI"])
+target_train, target_val = target_ts.split_after(0.8)
+target_val, target_test = target_val.split_after(0.5)
 
 
-model = SolarFlare.load_model("solarflaremodel.pth.tar")
+past_covar_ts = TimeSeries.from_dataframe(df[df.columns.to_list()[1:]])
+past_covar_train, past_covar_val = past_covar_ts.split_after(0.8)
+past_covar_val, past_covar_test = past_covar_val.split_after(0.5)
+
+# Scale data
+target_ts_scaler = Scaler()
+target_train = target_ts_scaler.fit_transform(target_train)
+target_val = target_ts_scaler.transform(target_val)
+target_test = target_ts_scaler.transform(target_test)
+series_transformed = target_ts_scaler.transform(target_ts)
+
+covar_ts_scaler = Scaler()
+covar_train = covar_ts_scaler.fit_transform(past_covar_train)
+covar_val = covar_ts_scaler.transform(past_covar_val)
+covar_test = covar_ts_scaler.transform(past_covar_test)
+
+model = SolarFlare.load_model("solarFuck333.pth.tar")
+model.device = torch.device("cpu")
+
+pred = model.predict(5, series=target_val[8:128], past_covariates=past_covar_val[8:128], num_samples=600)
+target_ts.slice_intersect(pred).plot(label="target")
+pred.plot(label="forecast")
+plt.show()
+
+
+def make_preds(n_preds=10):
+    pred_temp = None
+    for i in range(n_preds):
+        pred = model.predict(5, series=target_val[(0 + i):(120 + i)], past_covariates=past_covar_val[(0 + i):(120 + i)], num_samples=300)
+        if i == 0:
+            pred_temp = pred
+        else:
+            pred_temp = pred_temp.append(pred)
+
+
+    series_transformed.slice_intersect(pred_temp).plot(label="target")
+    pred_temp.plot(label="forecast")
+    plt.show()
+

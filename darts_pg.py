@@ -25,8 +25,19 @@ target_ts = TimeSeries.from_series(df["GHI"])
 target_train, target_val = target_ts.split_after(0.8)
 target_val, target_test = target_val.split_after(0.5)
 
-past_covariates = ["Tamb", "DewPoint", "Pw", "Cloudopacity", "Pressure", "AlbedoDaily", "WindVel", "DHI", "DNI", "EBH", "WindDir_cos", "WindDir_sin"]
-future_covariates = ["Year_sin", "Year_cos", "Month_sin", "Month_cos", "Day_sin", "Day_cos", "Hour_sin", "Hour_cos", "Azimuth_sin", "Azimuth_cos", "Zenith_sin", "Zenith"]
+past_covariates = ["Tamb", "DewPoint",
+                   "Pw", "Cloudopacity",
+                   "Pressure", "AlbedoDaily",
+                   "WindVel", "DHI", "DNI",
+                   "EBH", "WindDir_cos",
+                   "WindDir_sin", "Year_sin",
+                   "Year_cos", "Month_sin",
+                   "Month_cos", "Day_sin",
+                   "Day_cos", "Hour_sin",
+                   "Hour_cos", "Azimuth_sin",
+                   "Azimuth_cos", "Zenith_sin",
+                   "Zenith"]
+
 
 past_covar_ts = TimeSeries.from_dataframe(df[df.columns.to_list()[1:]])
 past_covar_train, past_covar_val = past_covar_ts.split_after(0.8)

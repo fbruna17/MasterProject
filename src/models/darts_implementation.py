@@ -110,9 +110,6 @@ class SolarFlare(TorchParametricProbabilisticForecastingModel, PastCovariatesTor
             return self.model(x).squeeze(dim=-1)
 
 
-
-
-
     @property
     def first_prediction_index(self) -> int:
         return -self.output_chunk_length
