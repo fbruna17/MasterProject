@@ -4,7 +4,6 @@ from typing import Tuple, Sequence, Optional, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import torch
 from darts import TimeSeries
 from darts.dataprocessing.transformers import Scaler
 from darts.logging import raise_if_not, get_logger
@@ -16,6 +15,7 @@ from darts.utils.torch import random_method
 from numpy.random.mtrand import RandomState
 from torch import Tensor
 
+from darts_utility import SolarFlare_No_Bigru, SolarFlare_No_Attention, SolarFlare
 from src.models.archs import WhateverNet2
 
 logger = get_logger(__name__)
@@ -27,7 +27,7 @@ import torch.nn.functional as F
 import numpy as np
 import torch
 from torch import nn
-from torch.nn.utils import weight_norm
+
 
 
 class TimeDistributed(nn.Module):
@@ -781,12 +781,12 @@ batch = 128
 df.insert(0, 'GHI', df.pop('GHI'))
 
 # Split data
-target_ts = TimeSeries.from_series(df["GHI"])
+target_ts = TimeSeries.from_series(df["GHI"]).astype(np.float32)
 target_train, target_val = target_ts.split_after(0.8)
 target_val, target_test = target_val.split_after(0.5)
 
 
-past_covar_ts = TimeSeries.from_dataframe(df[df.columns.to_list()[1:]])
+past_covar_ts = TimeSeries.from_dataframe(df[df.columns.to_list()[1:]]).astype(np.float32)
 past_covar_train, past_covar_val = past_covar_ts.split_after(0.8)
 past_covar_val, past_covar_test = past_covar_val.split_after(0.5)
 
@@ -802,13 +802,20 @@ covar_train = covar_ts_scaler.fit_transform(past_covar_train)
 covar_val = covar_ts_scaler.transform(past_covar_val)
 covar_test = covar_ts_scaler.transform(past_covar_test)
 
-model = SolarFlare.load_model("solarFuck333.pth.tar")
+model = SolarFlare.load_model("SolarFuck123_no_attention.pth.tar")
 model.device = torch.device("cpu")
 
-pred = model.predict(5, series=target_val[8:128], past_covariates=past_covar_val[8:128], num_samples=600)
+pred = model.predict(5, series=target_val[9:129], past_covariates=past_covar_val[9:129], num_samples=600)
 target_ts.slice_intersect(pred).plot(label="target")
 pred.plot(label="forecast")
 plt.show()
+
+backcast = model.historical_forecasts(series=target_train,
+                                      past_covariates=past_covar_train,
+                                      num_samples=300,
+                                      start=0.95,
+                                      retrain=False,
+                                      verbose=True)
 
 
 def make_preds(n_preds=10):
@@ -824,4 +831,6 @@ def make_preds(n_preds=10):
     series_transformed.slice_intersect(pred_temp).plot(label="target")
     pred_temp.plot(label="forecast")
     plt.show()
+
+
 
