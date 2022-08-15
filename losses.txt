@@ -1,0 +1,669 @@
+Training loss: 1.0760, validation loss: 0.2620, best val loss: 0.2620
+Training loss: 0.2188, validation loss: 0.1483, best val loss: 0.1483
+Training loss: 0.1223, validation loss: 0.0889, best val loss: 0.0889
+Training loss: 0.0778, validation loss: 0.0755, best val loss: 0.0755
+Training loss: 0.0547, validation loss: 0.0571, best val loss: 0.0571
+Training loss: 0.0443, validation loss: 0.0547, best val loss: 0.0547
+Training loss: 0.0390, validation loss: 0.0437, best val loss: 0.0437
+Training loss: 0.0362, validation loss: 0.0413, best val loss: 0.0413
+Training loss: 0.0337, validation loss: 0.0371, best val loss: 0.0371
+Training loss: 0.0319, validation loss: 0.0377, best val loss: 0.0371
+Training loss: 0.0303, validation loss: 0.0315, best val loss: 0.0315
+Training loss: 0.0292, validation loss: 0.0335, best val loss: 0.0315
+Training loss: 0.0286, validation loss: 0.0310, best val loss: 0.0310
+Training loss: 0.0332, validation loss: 0.0366, best val loss: 0.0310
+Training loss: 0.0272, validation loss: 0.0322, best val loss: 0.0310
+Training loss: 0.0261, validation loss: 0.0294, best val loss: 0.0294
+Training loss: 0.0251, validation loss: 0.0374, best val loss: 0.0294
+Training loss: 0.0251, validation loss: 0.0264, best val loss: 0.0264
+Training loss: 0.0251, validation loss: 0.0277, best val loss: 0.0264
+Training loss: 0.0243, validation loss: 0.0345, best val loss: 0.0264
+Training loss: 0.0238, validation loss: 0.0310, best val loss: 0.0264
+Training loss: 0.0232, validation loss: 0.0302, best val loss: 0.0264
+Training loss: 0.0232, validation loss: 0.0233, best val loss: 0.0233
+Training loss: 0.0223, validation loss: 0.0263, best val loss: 0.0233
+Training loss: 0.0220, validation loss: 0.0280, best val loss: 0.0233
+Training loss: 0.0217, validation loss: 0.0254, best val loss: 0.0233
+Training loss: 0.0216, validation loss: 0.0281, best val loss: 0.0233
+Training loss: 0.0207, validation loss: 0.0258, best val loss: 0.0233
+Training loss: 0.0205, validation loss: 0.0243, best val loss: 0.0233
+Training loss: 0.0204, validation loss: 0.0268, best val loss: 0.0233
+Training loss: 0.0200, validation loss: 0.0226, best val loss: 0.0226
+Training loss: 0.0198, validation loss: 0.0223, best val loss: 0.0223
+Training loss: 0.0196, validation loss: 0.0251, best val loss: 0.0223
+Training loss: 0.0192, validation loss: 0.0250, best val loss: 0.0223
+Training loss: 0.0195, validation loss: 0.0257, best val loss: 0.0223
+Training loss: 0.0189, validation loss: 0.0236, best val loss: 0.0223
+Training loss: 0.0185, validation loss: 0.0253, best val loss: 0.0223
+Training loss: 0.0185, validation loss: 0.0230, best val loss: 0.0223
+Training loss: 0.0185, validation loss: 0.0220, best val loss: 0.0220
+Training loss: 0.0183, validation loss: 0.0216, best val loss: 0.0216
+Training loss: 0.0182, validation loss: 0.0226, best val loss: 0.0216
+Training loss: 0.0178, validation loss: 0.0264, best val loss: 0.0216
+Training loss: 0.0174, validation loss: 0.0221, best val loss: 0.0216
+Training loss: 0.0197, validation loss: 0.0228, best val loss: 0.0216
+Training loss: 0.0174, validation loss: 0.0231, best val loss: 0.0216
+Training loss: 0.0169, validation loss: 0.0211, best val loss: 0.0211
+Training loss: 0.0170, validation loss: 0.0215, best val loss: 0.0211
+Training loss: 0.0167, validation loss: 0.0243, best val loss: 0.0211
+Training loss: 0.0167, validation loss: 0.0266, best val loss: 0.0211
+Training loss: 0.0164, validation loss: 0.0239, best val loss: 0.0211
+Training loss: 0.0163, validation loss: 0.0223, best val loss: 0.0211
+Training loss: 0.0165, validation loss: 0.0217, best val loss: 0.0211
+Training loss: 0.0164, validation loss: 0.0217, best val loss: 0.0211
+Training loss: 0.0161, validation loss: 0.0235, best val loss: 0.0211
+Training loss: 0.0161, validation loss: 0.0215, best val loss: 0.0211
+Training loss: 0.0158, validation loss: 0.0234, best val loss: 0.0211
+Training loss: 0.0157, validation loss: 0.0229, best val loss: 0.0211
+Training loss: 0.0160, validation loss: 0.0212, best val loss: 0.0211
+Training loss: 0.0154, validation loss: 0.0232, best val loss: 0.0211
+Training loss: 0.0155, validation loss: 0.0214, best val loss: 0.0211
+Training loss: 0.0151, validation loss: 0.0213, best val loss: 0.0211
+Training loss: 0.0153, validation loss: 0.0234, best val loss: 0.0211
+Training loss: 0.0151, validation loss: 0.0210, best val loss: 0.0210
+Training loss: 0.0149, validation loss: 0.0221, best val loss: 0.0210
+Training loss: 0.0148, validation loss: 0.0215, best val loss: 0.0210
+Training loss: 0.0156, validation loss: 0.0243, best val loss: 0.0210
+Training loss: 0.0149, validation loss: 0.0203, best val loss: 0.0203
+Training loss: 0.0147, validation loss: 0.0210, best val loss: 0.0203
+Training loss: 0.0145, validation loss: 0.0227, best val loss: 0.0203
+Training loss: 0.0146, validation loss: 0.0248, best val loss: 0.0203
+Training loss: 0.0143, validation loss: 0.0234, best val loss: 0.0203
+Training loss: 0.0142, validation loss: 0.0213, best val loss: 0.0203
+Training loss: 0.0144, validation loss: 0.0239, best val loss: 0.0203
+Training loss: 0.0140, validation loss: 0.0227, best val loss: 0.0203
+Training loss: 0.0140, validation loss: 0.0239, best val loss: 0.0203
+Training loss: 0.0141, validation loss: 0.0230, best val loss: 0.0203
+Training loss: 0.0138, validation loss: 0.0235, best val loss: 0.0203
+Training loss: 0.0138, validation loss: 0.0238, best val loss: 0.0203
+Training loss: 0.0138, validation loss: 0.0239, best val loss: 0.0203
+Training loss: 0.0137, validation loss: 0.0261, best val loss: 0.0203
+Training loss: 0.0136, validation loss: 0.0249, best val loss: 0.0203
+Training loss: 0.0135, validation loss: 0.0231, best val loss: 0.0203
+Training loss: 0.0144, validation loss: 0.0227, best val loss: 0.0203
+Training loss: 0.0137, validation loss: 0.0250, best val loss: 0.0203
+Training loss: 0.0136, validation loss: 0.0251, best val loss: 0.0203
+Training loss: 0.0133, validation loss: 0.0222, best val loss: 0.0203
+Training loss: 0.0133, validation loss: 0.0232, best val loss: 0.0203
+Training loss: 0.0131, validation loss: 0.0237, best val loss: 0.0203
+Training loss: 0.0132, validation loss: 0.0251, best val loss: 0.0203
+Training loss: 0.0132, validation loss: 0.0214, best val loss: 0.0203
+Training loss: 0.0129, validation loss: 0.0243, best val loss: 0.0203
+Training loss: 0.0131, validation loss: 0.0241, best val loss: 0.0203
+Training loss: 0.0130, validation loss: 0.0239, best val loss: 0.0203
+Training loss: 0.0130, validation loss: 0.0235, best val loss: 0.0203
+Training loss: 0.0130, validation loss: 0.0229, best val loss: 0.0203
+Training loss: 0.0126, validation loss: 0.0248, best val loss: 0.0203
+Training loss: 0.0126, validation loss: 0.0229, best val loss: 0.0203
+Training loss: 0.0126, validation loss: 0.0244, best val loss: 0.0203
+Training loss: 0.0125, validation loss: 0.0244, best val loss: 0.0203
+Training loss: 0.0126, validation loss: 0.0245, best val loss: 0.0203
+
+
+
+
+------
+
+
+
+Training loss: 0.5674, validation loss: 0.1736, best val loss: 0.1736
+Training loss: 0.1171, validation loss: 0.0748, best val loss: 0.0748
+Training loss: 0.0655, validation loss: 0.0581, best val loss: 0.0581
+Training loss: 0.0455, validation loss: 0.0455, best val loss: 0.0455
+Training loss: 0.0371, validation loss: 0.0459, best val loss: 0.0455
+Training loss: 0.0330, validation loss: 0.0297, best val loss: 0.0297
+Training loss: 0.0306, validation loss: 0.0372, best val loss: 0.0297
+Training loss: 0.0285, validation loss: 0.0322, best val loss: 0.0297
+Training loss: 0.0279, validation loss: 0.0224, best val loss: 0.0224
+Training loss: 0.0269, validation loss: 0.0279, best val loss: 0.0224
+Training loss: 0.0260, validation loss: 0.0255, best val loss: 0.0224
+Training loss: 0.0254, validation loss: 0.0257, best val loss: 0.0224
+Training loss: 0.0247, validation loss: 0.0221, best val loss: 0.0221
+Training loss: 0.0238, validation loss: 0.0263, best val loss: 0.0221
+Training loss: 0.0227, validation loss: 0.0190, best val loss: 0.0190
+Training loss: 0.0215, validation loss: 0.0241, best val loss: 0.0190
+Training loss: 0.0208, validation loss: 0.0214, best val loss: 0.0190
+Training loss: 0.0195, validation loss: 0.0188, best val loss: 0.0188
+Training loss: 0.0191, validation loss: 0.0177, best val loss: 0.0177
+Training loss: 0.0187, validation loss: 0.0204, best val loss: 0.0177
+Training loss: 0.0183, validation loss: 0.0149, best val loss: 0.0149
+Training loss: 0.0179, validation loss: 0.0149, best val loss: 0.0149
+Training loss: 0.0176, validation loss: 0.0161, best val loss: 0.0149
+Training loss: 0.0172, validation loss: 0.0157, best val loss: 0.0149
+Training loss: 0.0171, validation loss: 0.0145, best val loss: 0.0145
+Training loss: 0.0167, validation loss: 0.0136, best val loss: 0.0136
+Training loss: 0.0167, validation loss: 0.0150, best val loss: 0.0136
+Training loss: 0.0163, validation loss: 0.0135, best val loss: 0.0135
+Training loss: 0.0162, validation loss: 0.0168, best val loss: 0.0135
+Training loss: 0.0160, validation loss: 0.0139, best val loss: 0.0135
+Training loss: 0.0157, validation loss: 0.0154, best val loss: 0.0135
+Training loss: 0.0157, validation loss: 0.0131, best val loss: 0.0131
+Training loss: 0.0153, validation loss: 0.0159, best val loss: 0.0131
+Training loss: 0.0152, validation loss: 0.0140, best val loss: 0.0131
+Training loss: 0.0150, validation loss: 0.0136, best val loss: 0.0131
+Training loss: 0.0149, validation loss: 0.0128, best val loss: 0.0128
+Training loss: 0.0148, validation loss: 0.0131, best val loss: 0.0128
+Training loss: 0.0147, validation loss: 0.0125, best val loss: 0.0125
+Training loss: 0.0147, validation loss: 0.0129, best val loss: 0.0125
+Training loss: 0.0143, validation loss: 0.0135, best val loss: 0.0125
+Training loss: 0.0144, validation loss: 0.0156, best val loss: 0.0125
+Training loss: 0.0141, validation loss: 0.0114, best val loss: 0.0114
+Training loss: 0.0139, validation loss: 0.0133, best val loss: 0.0114
+Training loss: 0.0138, validation loss: 0.0135, best val loss: 0.0114
+Training loss: 0.0139, validation loss: 0.0121, best val loss: 0.0114
+Training loss: 0.0137, validation loss: 0.0137, best val loss: 0.0114
+Training loss: 0.0137, validation loss: 0.0132, best val loss: 0.0114
+Training loss: 0.0135, validation loss: 0.0129, best val loss: 0.0114
+Training loss: 0.0134, validation loss: 0.0125, best val loss: 0.0114
+Training loss: 0.0134, validation loss: 0.0136, best val loss: 0.0114
+Training loss: 0.0133, validation loss: 0.0125, best val loss: 0.0114
+Training loss: 0.0132, validation loss: 0.0138, best val loss: 0.0114
+Training loss: 0.0131, validation loss: 0.0132, best val loss: 0.0114
+Training loss: 0.0130, validation loss: 0.0119, best val loss: 0.0114
+Training loss: 0.0128, validation loss: 0.0130, best val loss: 0.0114
+Training loss: 0.0128, validation loss: 0.0125, best val loss: 0.0114
+Training loss: 0.0125, validation loss: 0.0153, best val loss: 0.0114
+Training loss: 0.0127, validation loss: 0.0127, best val loss: 0.0114
+Training loss: 0.0127, validation loss: 0.0115, best val loss: 0.0114
+Training loss: 0.0124, validation loss: 0.0148, best val loss: 0.0114
+Training loss: 0.0123, validation loss: 0.0117, best val loss: 0.0114
+Training loss: 0.0122, validation loss: 0.0151, best val loss: 0.0114
+Training loss: 0.0124, validation loss: 0.0119, best val loss: 0.0114
+Training loss: 0.0124, validation loss: 0.0132, best val loss: 0.0114
+Training loss: 0.0121, validation loss: 0.0124, best val loss: 0.0114
+Training loss: 0.0120, validation loss: 0.0120, best val loss: 0.0114
+Training loss: 0.0120, validation loss: 0.0124, best val loss: 0.0114
+Training loss: 0.0119, validation loss: 0.0135, best val loss: 0.0114
+Training loss: 0.0118, validation loss: 0.0125, best val loss: 0.0114
+Training loss: 0.0118, validation loss: 0.0120, best val loss: 0.0114
+Training loss: 0.0116, validation loss: 0.0127, best val loss: 0.0114
+Training loss: 0.0116, validation loss: 0.0132, best val loss: 0.0114
+Training loss: 0.0117, validation loss: 0.0119, best val loss: 0.0114
+Training loss: 0.0115, validation loss: 0.0116, best val loss: 0.0114
+Training loss: 0.0114, validation loss: 0.0124, best val loss: 0.0114
+Training loss: 0.0112, validation loss: 0.0117, best val loss: 0.0114
+Training loss: 0.0113, validation loss: 0.0121, best val loss: 0.0114
+Training loss: 0.0112, validation loss: 0.0132, best val loss: 0.0114
+Training loss: 0.0118, validation loss: 0.0141, best val loss: 0.0114
+Training loss: 0.0114, validation loss: 0.0121, best val loss: 0.0114
+Training loss: 0.0113, validation loss: 0.0134, best val loss: 0.0114
+Training loss: 0.0113, validation loss: 0.0143, best val loss: 0.0114
+Training loss: 0.0111, validation loss: 0.0132, best val loss: 0.0114
+Training loss: 0.0110, validation loss: 0.0121, best val loss: 0.0114
+Training loss: 0.0110, validation loss: 0.0122, best val loss: 0.0114
+Training loss: 0.0110, validation loss: 0.0136, best val loss: 0.0114
+Training loss: 0.0109, validation loss: 0.0124, best val loss: 0.0114
+Training loss: 0.0107, validation loss: 0.0131, best val loss: 0.0114
+Training loss: 0.0108, validation loss: 0.0123, best val loss: 0.0114
+Training loss: 0.0107, validation loss: 0.0136, best val loss: 0.0114
+Training loss: 0.0107, validation loss: 0.0129, best val loss: 0.0114
+Training loss: 0.0106, validation loss: 0.0137, best val loss: 0.0114
+Training loss: 0.0105, validation loss: 0.0137, best val loss: 0.0114
+Training loss: 0.0104, validation loss: 0.0130, best val loss: 0.0114
+Training loss: 0.0103, validation loss: 0.0134, best val loss: 0.0114
+Training loss: 0.0103, validation loss: 0.0148, best val loss: 0.0114
+Training loss: 0.0104, validation loss: 0.0141, best val loss: 0.0114
+Training loss: 0.0102, validation loss: 0.0142, best val loss: 0.0114
+Training loss: 0.0102, validation loss: 0.0131, best val loss: 0.0114
+Training loss: 0.0101, validation loss: 0.0148, best val loss: 0.0114
+Training loss: 0.0103, validation loss: 0.0138, best val loss: 0.0114
+
+
+
+____
+
+
+
+1,1853, 0,4216, 0,4216
+0,2105, 0,1904, 0,1904
+0,1856, 0,1791, 0,1791
+0,1756, 0,1654, 0,1654
+0,1677, 0,1588, 0,1588
+0,1525, 0,1364, 0,1364
+0,1305, 0,1215, 0,1215
+0,1206, 0,1047, 0,1047
+0,1140, 0,1009, 0,1009
+0,1088, 0,0959, 0,0959
+0,1043, 0,0922, 0,0922
+0,0980, 0,0827, 0,0827
+0,0930, 0,0822, 0,0822
+0,0897, 0,0768, 0,0768
+0,0872, 0,0754, 0,0754
+0,0853, 0,0747, 0,0747
+0,0834, 0,0727, 0,0727
+0,0819, 0,0707, 0,0707
+0,0804, 0,0703, 0,0703
+0,0792, 0,0698, 0,0698
+0,0782, 0,0692, 0,0692
+0,0772, 0,0682, 0,0682
+0,0762, 0,0683, 0,0682
+0,0755, 0,0666, 0,0666
+0,0747, 0,0657, 0,0657
+0,0741, 0,0655, 0,0655
+0,0735, 0,0644, 0,0644
+0,0730, 0,0638, 0,0638
+0,0726, 0,0640, 0,0638
+0,0723, 0,0635, 0,0635
+0,0720, 0,0634, 0,0634
+0,0718, 0,0629, 0,0629
+0,0717, 0,0628, 0,0628
+0,0715, 0,0626, 0,0626
+0,0715, 0,0626, 0,0626
+0,0797, 0,0621, 0,0621
+0,0734, 0,0611, 0,0611
+0,0714, 0,0587, 0,0587
+0,0696, 0,0572, 0,0572
+0,0696, 0,0572, 0,0572
+0,0679, 0,0578, 0,0572
+0,0665, 0,0604, 0,0572
+0,0650, 0,0565, 0,0565
+0,0637, 0,0556, 0,0556
+0,0627, 0,0530, 0,0530
+0,0615, 0,0532, 0,0530
+0,0604, 0,0548, 0,0530
+0,0595, 0,0534, 0,0530
+0,0587, 0,0539, 0,0530
+0,0578, 0,0518, 0,0518
+0,0569, 0,0515, 0,0515
+0,0563, 0,0527, 0,0515
+0,0555, 0,0504, 0,0504
+0,0550, 0,0500, 0,0500
+0,0543, 0,0502, 0,0500
+0,0538, 0,0499, 0,0499
+0,0533, 0,0504, 0,0499
+0,0528, 0,0505, 0,0499
+0,0523, 0,0496, 0,0496
+0,0519, 0,0497, 0,0496
+0,0516, 0,0490, 0,0490
+0,0513, 0,0493, 0,0490
+0,0510, 0,0492, 0,0490
+0,0508, 0,0495, 0,0490
+0,0504, 0,0488, 0,0488
+0,0503, 0,0489, 0,0488
+0,0502, 0,0490, 0,0488
+0,0502, 0,0490, 0,0488
+0,0501, 0,0491, 0,0488
+0,0500, 0,0489, 0,0488
+0,0573, 0,0508, 0,0488
+0,0536, 0,0529, 0,0488
+0,0527, 0,0523, 0,0488
+0,0519, 0,0507, 0,0488
+0,0516, 0,0500, 0,0488
+0,0508, 0,0501, 0,0488
+0,0503, 0,0503, 0,0488
+0,0497, 0,0482, 0,0482
+0,0491, 0,0481, 0,0481
+0,0485, 0,0504, 0,0481
+0,0481, 0,0513, 0,0481
+0,0476, 0,0487, 0,0481
+0,0470, 0,0508, 0,0481
+0,0467, 0,0465, 0,0465
+0,0461, 0,0490, 0,0465
+0,0456, 0,0471, 0,0465
+0,0452, 0,0469, 0,0465
+0,0448, 0,0472, 0,0465
+0,0444, 0,0471, 0,0465
+0,0441, 0,0465, 0,0465
+0,0437, 0,0480, 0,0465
+0,0433, 0,0480, 0,0465
+0,0430, 0,0477, 0,0465
+0,0427, 0,0479, 0,0465
+0,0425, 0,0471, 0,0465
+0,0423, 0,0475, 0,0465
+0,0421, 0,0468, 0,0465
+0,0420, 0,0472, 0,0465
+0,0418, 0,0469, 0,0465
+0,0417, 0,0469, 0,0465
+
+No attention
+
+0,8156, 0,2599, 0,2599
+0,2063, 0,1923, 0,1923
+0,1904, 0,1841, 0,1841
+0,1831, 0,1789, 0,1789
+0,1768, 0,1747, 0,1747
+0,1714, 0,1771, 0,1747
+0,1676, 0,1730, 0,1730
+0,1653, 0,1692, 0,1692
+0,1633, 0,1718, 0,1692
+0,1615, 0,1704, 0,1692
+0,1599, 0,1700, 0,1692
+0,1581, 0,1700, 0,1692
+0,1565, 0,1702, 0,1692
+0,1549, 0,1741, 0,1692
+0,1532, 0,1732, 0,1692
+0,1513, 0,1749, 0,1692
+0,1495, 0,1766, 0,1692
+0,1477, 0,1811, 0,1692
+0,1458, 0,1785, 0,1692
+0,1440, 0,1813, 0,1692
+0,1421, 0,1840, 0,1692
+0,1405, 0,1850, 0,1692
+0,1389, 0,1861, 0,1692
+0,1375, 0,1909, 0,1692
+0,1363, 0,1899, 0,1692
+0,1352, 0,1936, 0,1692
+0,1343, 0,1950, 0,1692
+0,1335, 0,1946, 0,1692
+0,1328, 0,1956, 0,1692
+0,1324, 0,1962, 0,1692
+0,1321, 0,1961, 0,1692
+0,1317, 0,1970, 0,1692
+0,1316, 0,1968, 0,1692
+0,1315, 0,1972, 0,1692
+0,1315, 0,1970, 0,1692
+0,1370, 0,1950, 0,1692
+0,1293, 0,2049, 0,1692
+0,1250, 0,2148, 0,1692
+0,1212, 0,2188, 0,1692
+0,1179, 0,2215, 0,1692
+0,1151, 0,2249, 0,1692
+0,1126, 0,2275, 0,1692
+0,1103, 0,2209, 0,1692
+0,1084, 0,2290, 0,1692
+0,1066, 0,2265, 0,1692
+0,1050, 0,2302, 0,1692
+0,1036, 0,2319, 0,1692
+0,1023, 0,2294, 0,1692
+0,1011, 0,2328, 0,1692
+0,1000, 0,2313, 0,1692
+0,0991, 0,2307, 0,1692
+0,0982, 0,2344, 0,1692
+0,0974, 0,2344, 0,1692
+0,0967, 0,2326, 0,1692
+0,0960, 0,2328, 0,1692
+0,0954, 0,2334, 0,1692
+0,0949, 0,2338, 0,1692
+0,0944, 0,2349, 0,1692
+0,0940, 0,2337, 0,1692
+0,0936, 0,2358, 0,1692
+0,0932, 0,2328, 0,1692
+0,0929, 0,2344, 0,1692
+0,0927, 0,2361, 0,1692
+0,0926, 0,2344, 0,1692
+0,0923, 0,2349, 0,1692
+0,0922, 0,2350, 0,1692
+0,0921, 0,2356, 0,1692
+0,0921, 0,2357, 0,1692
+0,0920, 0,2358, 0,1692
+0,0920, 0,2358, 0,1692
+0,0984, 0,2376, 0,1692
+0,0949, 0,2355, 0,1692
+0,0942, 0,2363, 0,1692
+0,0934, 0,2335, 0,1692
+0,0927, 0,2321, 0,1692
+0,0922, 0,2343, 0,1692
+0,0916, 0,2402, 0,1692
+0,0909, 0,2366, 0,1692
+0,0903, 0,2344, 0,1692
+0,0897, 0,2390, 0,1692
+0,0892, 0,2373, 0,1692
+0,0887, 0,2387, 0,1692
+0,0883, 0,2394, 0,1692
+0,0878, 0,2358, 0,1692
+0,0872, 0,2399, 0,1692
+0,0869, 0,2394, 0,1692
+0,0865, 0,2407, 0,1692
+0,0861, 0,2418, 0,1692
+0,0857, 0,2415, 0,1692
+0,0853, 0,2428, 0,1692
+0,0850, 0,2402, 0,1692
+0,0846, 0,2413, 0,1692
+0,0844, 0,2413, 0,1692
+0,0841, 0,2415, 0,1692
+0,0839, 0,2412, 0,1692
+0,0837, 0,2430, 0,1692
+0,0835, 0,2411, 0,1692
+0,0834, 0,2416, 0,1692
+0,0833, 0,2435, 0,1692
+0,0832, 0,2440, 0,1692
+
+No Bigru
+
+0,4204, 0,2293, 0,2293
+0,1980, 0,1730, 0,1730
+0,1822, 0,1674, 0,1674
+0,1744, 0,1596, 0,1596
+0,1681, 0,1550, 0,1550
+0,1600, 0,1465, 0,1465
+0,1512, 0,1335, 0,1335
+0,1446, 0,1274, 0,1274
+0,1354, 0,1177, 0,1177
+0,1258, 0,1073, 0,1073
+0,1209, 0,1020, 0,1020
+0,1175, 0,0974, 0,0974
+0,1150, 0,0983, 0,0974
+0,1127, 0,0957, 0,0957
+0,1110, 0,0920, 0,0920
+0,1094, 0,0911, 0,0911
+0,1080, 0,0905, 0,0905
+0,1066, 0,0884, 0,0884
+0,1055, 0,0858, 0,0858
+0,1044, 0,0880, 0,0858
+0,1034, 0,0865, 0,0858
+0,1024, 0,0854, 0,0854
+0,1013, 0,0832, 0,0832
+0,1003, 0,0825, 0,0825
+0,0993, 0,0808, 0,0808
+0,0983, 0,0807, 0,0807
+0,0976, 0,0798, 0,0798
+0,0969, 0,0797, 0,0797
+0,0964, 0,0791, 0,0791
+0,0961, 0,0788, 0,0788
+0,0957, 0,0786, 0,0786
+0,0956, 0,0784, 0,0784
+0,0954, 0,0782, 0,0782
+0,0954, 0,0782, 0,0782
+0,0953, 0,0782, 0,0782
+0,1016, 0,0795, 0,0782
+0,0962, 0,0821, 0,0782
+0,0944, 0,0766, 0,0766
+0,0929, 0,0782, 0,0766
+0,0915, 0,0745, 0,0745
+0,0900, 0,0754, 0,0745
+0,0888, 0,0728, 0,0728
+0,0877, 0,0740, 0,0728
+0,0865, 0,0732, 0,0728
+0,0854, 0,0723, 0,0723
+0,0843, 0,0729, 0,0723
+0,0834, 0,0727, 0,0723
+0,0826, 0,0706, 0,0706
+0,0816, 0,0712, 0,0706
+0,0809, 0,0744, 0,0706
+0,0801, 0,0712, 0,0706
+0,0793, 0,0704, 0,0704
+0,0785, 0,0701, 0,0701
+0,0776, 0,0707, 0,0701
+0,0771, 0,0708, 0,0701
+0,0763, 0,0691, 0,0691
+0,0756, 0,0692, 0,0691
+0,0751, 0,0697, 0,0691
+0,0744, 0,0697, 0,0691
+0,0740, 0,0681, 0,0681
+0,0735, 0,0683, 0,0681
+0,0732, 0,0678, 0,0678
+0,0729, 0,0680, 0,0678
+0,0726, 0,0680, 0,0678
+0,0724, 0,0679, 0,0678
+0,0723, 0,0678, 0,0678
+0,0721, 0,0675, 0,0675
+0,0721, 0,0678, 0,0675
+0,0720, 0,0675, 0,0675
+0,0720, 0,0676, 0,0675
+0,0786, 0,0704, 0,0675
+0,0749, 0,0692, 0,0675
+0,0740, 0,0675, 0,0675
+0,0732, 0,0674, 0,0674
+0,0722, 0,0663, 0,0663
+0,0713, 0,0671, 0,0663
+0,0708, 0,0672, 0,0663
+0,0700, 0,0661, 0,0661
+0,0693, 0,0670, 0,0661
+0,0685, 0,0674, 0,0661
+0,0680, 0,0653, 0,0653
+0,0672, 0,0692, 0,0653
+0,0668, 0,0680, 0,0653
+0,0659, 0,0686, 0,0653
+0,0654, 0,0663, 0,0653
+0,0649, 0,0689, 0,0653
+0,0644, 0,0693, 0,0653
+0,0639, 0,0688, 0,0653
+0,0634, 0,0691, 0,0653
+0,0629, 0,0695, 0,0653
+0,0625, 0,0700, 0,0653
+0,0620, 0,0694, 0,0653
+0,0618, 0,0714, 0,0653
+0,0614, 0,0691, 0,0653
+0,0611, 0,0702, 0,0653
+0,0608, 0,0702, 0,0653
+0,0605, 0,0692, 0,0653
+0,0603, 0,0711, 0,0653
+0,0602, 0,0713, 0,0653
+0,0600, 0,0706, 0,0653
+
+
+
+Training loss: 0.1023, validation loss: 0.0846, best val loss: 0.0846
+Training loss: 0.0930, validation loss: 0.0775, best val loss: 0.0775
+Training loss: 0.0883, validation loss: 0.0767, best val loss: 0.0767
+Training loss: 0.0854, validation loss: 0.0727, best val loss: 0.0727
+Training loss: 0.0830, validation loss: 0.0713, best val loss: 0.0713
+Training loss: 0.0808, validation loss: 0.0695, best val loss: 0.0695
+Training loss: 0.0786, validation loss: 0.0671, best val loss: 0.0671
+Training loss: 0.0755, validation loss: 0.0663, best val loss: 0.0663
+Training loss: 0.0728, validation loss: 0.0633, best val loss: 0.0633
+Training loss: 0.0709, validation loss: 0.0645, best val loss: 0.0633
+Training loss: 0.0693, validation loss: 0.0626, best val loss: 0.0626
+Training loss: 0.0679, validation loss: 0.0608, best val loss: 0.0608
+Training loss: 0.0666, validation loss: 0.0610, best val loss: 0.0608
+Training loss: 0.0652, validation loss: 0.0588, best val loss: 0.0588
+Training loss: 0.0640, validation loss: 0.0593, best val loss: 0.0588
+Training loss: 0.0630, validation loss: 0.0590, best val loss: 0.0588
+Training loss: 0.0454, validation loss: 0.0553, best val loss: 0.0531
+Training loss: 0.0438, validation loss: 0.0519, best val loss: 0.0519
+Training loss: 0.0428, validation loss: 0.0547, best val loss: 0.0519
+Training loss: 0.0420, validation loss: 0.0519, best val loss: 0.0519
+Training loss: 0.0413, validation loss: 0.0523, best val loss: 0.0519
+Training loss: 0.0408, validation loss: 0.0507, best val loss: 0.0507
+Training loss: 0.0403, validation loss: 0.0493, best val loss: 0.0493
+Training loss: 0.0398, validation loss: 0.0484, best val loss: 0.0484
+Training loss: 0.0393, validation loss: 0.0497, best val loss: 0.0484
+Training loss: 0.0390, validation loss: 0.0491, best val loss: 0.0484
+Training loss: 0.0387, validation loss: 0.0489, best val loss: 0.0484
+Training loss: 0.0383, validation loss: 0.0485, best val loss: 0.0484
+Training loss: 0.0380, validation loss: 0.0484, best val loss: 0.0484
+Training loss: 0.0378, validation loss: 0.0489, best val loss: 0.0484
+Training loss: 0.0376, validation loss: 0.0476, best val loss: 0.0476
+Training loss: 0.0375, validation loss: 0.0475, best val loss: 0.0475
+Training loss: 0.0331, validation loss: 0.0475, best val loss: 0.0461
+Training loss: 0.0329, validation loss: 0.0463, best val loss: 0.0461
+Training loss: 0.0325, validation loss: 0.0453, best val loss: 0.0453
+Training loss: 0.0324, validation loss: 0.0470, best val loss: 0.0453
+Training loss: 0.0322, validation loss: 0.0464, best val loss: 0.0453
+Training loss: 0.0320, validation loss: 0.0463, best val loss: 0.0453
+Training loss: 0.0319, validation loss: 0.0447, best val loss: 0.0447
+Training loss: 0.0318, validation loss: 0.0454, best val loss: 0.0447
+Training loss: 0.0316, validation loss: 0.0440, best val loss: 0.0440
+Training loss: 0.0316, validation loss: 0.0450, best val loss: 0.0440
+_____
+0,9558 0,2383 0,2383
+0,1900 0,1822 0,1822
+0,1727 0,1632 0,1632
+0,1493 0,1333 0,1333
+0,1227 0,1037 0,1037
+0,1128 0,0955 0,0955
+0,1062 0,0857 0,0857
+0,1003 0,0784 0,0784
+0,0945 0,0778 0,0778
+0,0905 0,0772 0,0772
+0,0871 0,0737 0,0737
+0,0841 0,0731 0,0731
+0,0813 0,0764 0,0731
+0,0791 0,0733 0,0731
+0,0772 0,0705 0,0705
+0,0751 0,0717 0,0705
+0,0726 0,0657 0,0657
+0,0705 0,0631 0,0631
+0,0688 0,0653 0,0631
+0,0665 0,0614 0,0614
+0,0656 0,0616 0,0614
+0,0649 0,0603 0,0603
+0,0645 0,0610 0,0603
+0,0640 0,0596 0,0596
+0,0636 0,0596 0,0596
+0,0635 0,0601 0,0596
+0,0635 0,0597 0,0596
+0,0634 0,0598 0,0596
+0,0665 0,0711 0,0596
+0,0642 0,0622 0,0596
+0,0621 0,0641 0,0596
+0,0606 0,0636 0,0596
+0,0591 0,0724 0,0596
+0,0575 0,0647 0,0596
+0,0560 0,0632 0,0596
+0,0546 0,0656 0,0596
+0,0531 0,0592 0,0592
+0,0518 0,0602 0,0592
+0,0503 0,0608 0,0592
+0,0490 0,0547 0,0547
+0,0475 0,0571 0,0547
+0,0464 0,0593 0,0547
+0,0455 0,0584 0,0547
+0,0448 0,0589 0,0547
+0,0440 0,0589 0,0547
+0,0434 0,0551 0,0547
+0,0429 0,0562 0,0547
+0,0425 0,0578 0,0547
+0,0422 0,0568 0,0547
+0,0418 0,0563 0,0547
+0,0416 0,0571 0,0547
+0,0413 0,0559 0,0547
+0,0409 0,0562 0,0547
+0,0410 0,0557 0,0547
+0,0411 0,0558 0,0547
+0,0470 0,0597 0,0547
+0,0447 0,0624 0,0547
+0,0443 0,0614 0,0547
+0,0435 0,0664 0,0547
+0,0429 0,0612 0,0547
+0,0425 0,0600 0,0547
+0,0420 0,0599 0,0547
+0,0414 0,0635 0,0547
+0,0410 0,0614 0,0547
+0,0404 0,0585 0,0547
+0,0399 0,0602 0,0547
+0,0395 0,0592 0,0547
+0,0391 0,0559 0,0547
+0,0386 0,0586 0,0547
+0,0383 0,0595 0,0547
+0,0379 0,0595 0,0547
+0,0375 0,0614 0,0547
+0,0371 0,0608 0,0547
+0,0369 0,0571 0,0547
+0,0366 0,0582 0,0547
+0,0363 0,0597 0,0547
+0,0361 0,0609 0,0547
+0,0357 0,0599 0,0547
+0,0356 0,0594 0,0547
+0,0355 0,0591 0,0547
+0,0353 0,0592 0,0547
+0,0354 0,0589 0,0547
+0,0353 0,0588 0,0547
+0,0352 0,0588 0,0547
+0,0394 0,0597 0,0547
+0,0390 0,0646 0,0547
+0,0388 0,0621 0,0547
+0,0384 0,0648 0,0547
+0,0378 0,0585 0,0547
+0,0373 0,0589 0,0547
+0,0368 0,0677 0,0547
+0,0365 0,0606 0,0547
+0,0359 0,0611 0,0547
+0,0356 0,0616 0,0547
+0,0352 0,0624 0,0547
+0,0348 0,0567 0,0547
+0,0345 0,0577 0,0547
+0,0341 0,0602 0,0547
+0,0338 0,0562 0,0547
+0,0334 0,0565 0,0547
+0,0330 0,0571 0,0547

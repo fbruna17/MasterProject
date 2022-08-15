@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm_notebook as tqdm
 
-import matplotlib.pyplot as plt
 
 from darts import TimeSeries, concatenate
 from darts.dataprocessing.transformers import Scaler
